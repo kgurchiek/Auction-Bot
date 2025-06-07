@@ -1,0 +1,52 @@
+{
+    "supabase": {
+        "url": "",
+        "key": ""
+    },
+    "discord": {
+        "token": "",
+        "id": "",
+        "server": "",
+        "staffRoles": [""],
+        "dkpChannel": "",
+        "pppChannel": ""
+    },
+    "auction": {
+        "DKP": {
+            "min": 0,
+            "increment": 0.1,
+            "raise": 0  
+        },
+        "PPP": {
+            "min": 0,
+            "increment": 0.1,
+            "raise": 1
+        }
+    },
+    "google": {
+        "credentials": {
+            "type": "service_account",
+            "project_id": "",
+            "private_key_id": "",
+            "private_key": "",
+            "client_email": "",
+            "client_id": "",
+            "auth_uri": "",
+            "token_uri": "",
+            "auth_provider_x509_cert_url": "",
+            "client_x509_cert_url": "",
+            "universe_domain": ""
+        },
+        "DKP": {
+            "sheet": "",
+            "logId": "",
+            "logName": ""
+        },
+        "PPP": {
+            "sheet": "",
+            "logId": "",
+            "logName": ""
+        },
+        "tallySheet": ""
+    }
+}
