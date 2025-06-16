@@ -14,7 +14,12 @@ module.exports = {
         option.setName('name')
             .setDescription('the new username to update to')
             .setRequired(true)
+            .setAutocomplete(true)
     ),
+    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
+        const focusedValue = interaction.options.getFocused(true);
+        await interaction.respond(tallySheet.map(a => a[0]).filter(a => a.toLowerCase().includes(focusedValue.value.toLowerCase())).map(choice => ({ name: choice, value: choice })).slice(0, 25));
+    },
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
         await interaction.deferReply();
         const user = interaction.options.getUser('user');
