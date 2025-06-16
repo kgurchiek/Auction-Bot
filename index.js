@@ -20,7 +20,7 @@ const { google } = require('googleapis');
     let googleSheets = google.sheets({ version: 'v4', auth: googleClient });
 
     let dkpSheet;
-    const updateDKPSheet = async () => {
+    async function updateDKPSheet() {
         let sheet = (await (await fetch(config.google.DKP.sheet, { headers: { Authorization: `Bearer ${googleToken.token}` }})).text()).split('\n').map(a => {
             a = a.trim();
             let row = [''];
@@ -35,6 +35,7 @@ const { google } = require('googleapis');
         if (sheet[0][1] != 'Lifetime Points') return;
         dkpSheet = sheet.slice(1);
         for (const row of dkpSheet) {
+            if (row[0] == '') continue;
             let { error } = await supabase.from('users').update({ dkp: row[2] }).eq('username', row[0]);
             if (error) {
                 console.log('Error updating user:', error);
@@ -42,11 +43,9 @@ const { google } = require('googleapis');
             }
         }
     }
-    updateDKPSheet();
-    setInterval(updateDKPSheet, 1000 * 60 * 15);
 
     let pppSheet;
-    const updatePPPSheet = async () => {
+    async function updatePPPSheet() {
         let sheet = (await (await fetch(config.google.PPP.sheet, { headers: { Authorization: `Bearer ${googleToken.token}` }})).text()).split('\n').map(a => {
             a = a.trim();
             let row = [''];
@@ -61,6 +60,7 @@ const { google } = require('googleapis');
         if (sheet[0][0] != 'Member') return;
         pppSheet = sheet.slice(1);
         for (const row of pppSheet) {
+            if (row[0] == '') continue;
             let { error } = await supabase.from('users').update({ ppp: row[2] }).eq('username', row[0]);
             if (error) {
                 console.log('Error updating user:', error);
@@ -68,11 +68,9 @@ const { google } = require('googleapis');
             }
         }
     }
-    updatePPPSheet();
-    setInterval(updatePPPSheet, 1000 * 60 * 15);
 
     let tallySheet;
-    const updateTallySheet = async () => {
+    async function updateTallySheet() {
         let sheet = (await (await fetch(config.google.tallySheet, { headers: { Authorization: `Bearer ${googleToken.token}` }})).text()).split('\n').map(a => {
             a = a.trim();
             let row = [''];
@@ -88,6 +86,7 @@ const { google } = require('googleapis');
         if (sheet[0][0] != 'Notes') return;
         tallySheet = sheet.slice(7);
         for (const row of tallySheet) {
+            if (row[0] == '') continue;
             let { error } = await supabase.from('users').update({ frozen: row[2].toLowerCase() == 'true' }).eq('username', row[0]);
             if (error) {
                 console.log('Error updating user:', error);
@@ -95,13 +94,25 @@ const { google } = require('googleapis');
             }
         }
     }
-    updateTallySheet();
-    setInterval(updateTallySheet, 1000 * 60 * 15);
 
-    let itemSheet;
-    const updateItemSheet = () => {};
-    updateItemSheet();
-    setInterval(updateItemSheet, 1000 * 60 * 15);
+    function updateSheets() {
+        return new Promise(res => {
+            let finished = 0;
+            updateDKPSheet()
+                .then(() => finished++);
+            updatePPPSheet()
+                .then(() => finished++);
+            updateTallySheet()
+                .then(() => finished++);
+            let interval = setInterval(() => {
+                if (finished < 3) return;
+                clearInterval(interval);
+                res();
+            })
+        });
+    }
+    updateSheets();
+    setInterval(updateSheets, 1000 * 60 * 15);
 
     process.on('uncaughtException', console.error);
 
@@ -197,7 +208,7 @@ const { google } = require('googleapis');
             }
             
             try {
-                await command.execute(interaction, client, user, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets);
+                await command.execute(interaction, client, user, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets, updateSheets);
             } catch (error) {
                 console.log(error);
                 var errorEmbed = new EmbedBuilder()
