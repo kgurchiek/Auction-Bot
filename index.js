@@ -275,8 +275,20 @@ const { google } = require('googleapis');
     client.on(Events.MessageDelete, async message => {
         for (const item in auctions) {
             const auction = auctions[item];
-            if (auction.DKP && auction.DKP?.message.guildId == message.guildId && auction.DKP?.message.channelId == message.channelId && auction.DKP?.message.id == message.id) auction.DKP.message = await dkpChannel.send({ embeds: [auction.DKP.embed] });
-            if (auction.PPP && auction.PPP?.message.guildId == message.guildId && auction.PPP?.message.channelId == message.channelId && auction.PPP?.message.id == message.id) auction.PPP.message = await pppChannel.send({ embeds: [auction.PPP.embed] });
+            let foundDKP = false;
+            let foundPPP = false;
+            if (auction.DKP && auction.DKP?.message.guildId == message.guildId && auction.DKP?.message.channelId == message.channelId && auction.DKP?.message.id == message.id) foundDKP = true;
+            if (auction.PPP && auction.PPP?.message.guildId == message.guildId && auction.PPP?.message.channelId == message.channelId && auction.PPP?.message.id == message.id) foundPPP = true;
+            if (!(foundDKP || foundPPP)) continue;
+            if (auctionList.find(a => a.item.name == item)) {
+                if (foundDKP) auction.DKP.message = await dkpChannel.send({ embeds: [auction.DKP.embed] });
+                if (foundPPP) auction.PPP.message = await pppChannel.send({ embeds: [auction.PPP.embed] });
+            } else delete auctions[item];
+        }
+        try {
+            fs.writeFileSync('./auctions.json', JSON.stringify(auctions, '', '  '));
+        } catch (err) {
+            console.log('Error saving auctions:', err);
         }
     })
 
