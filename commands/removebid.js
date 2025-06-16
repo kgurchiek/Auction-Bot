@@ -13,12 +13,10 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
+    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
-        let { data: auctionList } = await supabase.from('auctions').select('item (name, type), open, bids').eq('open', true).limit(25);
-        if (auctionList == null) auctionList = [];
         let bidList = auctionList.reduce((a, b) => a.concat(b.bids.map(c => ({ item: b.item.name, type: b.item.type, user: c.user, amount: c.amount }))), []).filter((a, i, arr) => arr.find(b => b.item == a.item && b.user == a.user && b.amount > a.amount) == null);
-        await interaction.respond(bidList.map(a => ({ name: `${a.user}: ${a.item} (${a.amount} ${a.type})`, value: `${a.item}:${a.user}` })).filter(a => a.name.toLowerCase().includes(focusedValue.value.toLowerCase())).sort((a, b) => a.name > b.name ? 1 : -1));
+        await interaction.respond(bidList.map(a => ({ name: `${a.user}: ${a.item} (${a.amount} ${a.type})`, value: `${a.item}:${a.user}` })).filter(a => a.name.toLowerCase().includes(focusedValue.value.toLowerCase())).sort((a, b) => a.name > b.name ? 1 : -1).slice(0, 25));
     },
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets) {
         await interaction.deferReply({ ephemeral: true });

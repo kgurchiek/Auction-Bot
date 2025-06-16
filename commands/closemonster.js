@@ -13,11 +13,9 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
+    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
-        let { data: auctionList } = await supabase.from('auctions').select('item!inner(name, monster), open').eq('open', true).ilike('item.monster', `%${focusedValue.value}%`)
-        if (auctionList == null) auctionList = [];
-        await interaction.respond(auctionList.map(a => a.item.monster).filter((a, i, arr) => !arr.slice(0, i).includes(a) && auctions[a] != null).map(a => ({ name: a, value: a })).slice(0, 25));
+        await interaction.respond(auctionList.filter(a => a.item.monster.toLowerCase().includes(focusedValue.value.toLowerCase())).filter((a, i, arr) => !arr.slice(0, i).includes(a.item.monster) && auctions[a.item.monster] != null).map(a => ({ name: a.item.monster, value: a.item.monster })).slice(0, 25));
     },
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets) {
         await interaction.deferReply({ ephemeral: true });

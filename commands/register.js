@@ -11,10 +11,10 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
         ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet) {
+    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
         let usernames = tallySheet.map(a => a[0]);
         const focusedValue = interaction.options.getFocused(true);
-        await interaction.respond(usernames.filter(a => a.toLowerCase().includes(focusedValue.value.toLowerCase())).slice(0, 25).map(choice => ({ name: choice, value: choice })));
+        await interaction.respond(usernames.filter(a => a.toLowerCase().includes(focusedValue.value.toLowerCase())).map(choice => ({ name: choice, value: choice })).slice(0, 25));
     },
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
         await interaction.deferReply();

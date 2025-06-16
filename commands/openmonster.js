@@ -13,12 +13,10 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet) {
+    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
-        let { data: items } = await supabase.from('items').select('*').eq('available', true);
-        if (items == null) items = [];
-        let monsters = items.map(a => a.monster).filter((a, i, arr) => !arr.slice(0, i).includes(a));
-        await interaction.respond(monsters.filter(a => a.toLowerCase().includes(focusedValue.value.toLowerCase())).sort((a, b) => a > b ? 1 : -1).map(a => ({ name: a, value: a })).slice(0, 25));
+        let monsters = itemList.map(a => a.monster).filter((a, i, arr) => !arr.slice(0, i).includes(a) && a.toLowerCase().includes(focusedValue.value.toLowerCase()));
+        await interaction.respond(monsters.sort((a, b) => a > b ? 1 : -1).map(a => ({ name: a, value: a })).slice(0, 25));
     },
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel) {
         await interaction.deferReply({ ephemeral: true });

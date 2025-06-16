@@ -13,11 +13,9 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet) {
+    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
-        let { data: items } = await supabase.from('items').select('*').eq('available', true).ilike('name', `%${focusedValue.value}%`).order('name').limit(25);
-        if (items == null) items = [];
-        await interaction.respond(items.map(a => ({ name: a.name, value: a.name })));
+        await interaction.respond(itemList.filter(a => a.name.toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: a.name, value: a.name })).slice(0, 25));
     },
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel) {
         await interaction.deferReply({ ephemeral: true });

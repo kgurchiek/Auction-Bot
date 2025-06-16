@@ -11,9 +11,9 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet) {
+    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
-        await interaction.respond((await supabase.from('auctions').select('*').ilike('item', `%${focusedValue.value}%`).eq('open', true)).data.map(a => ({ name: a.item, value: a.item })).slice(0, 25));
+        await interaction.respond(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: a.item.name, value: a.item.name })).slice(0, 25));
     },
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
         await interaction.deferReply();

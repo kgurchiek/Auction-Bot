@@ -38,7 +38,7 @@ const { google } = require('googleapis');
             if (row[0] == '') continue;
             let { error } = await supabase.from('users').update({ dkp: row[2] }).eq('username', row[0]);
             if (error) {
-                console.log('Error updating user:', error);
+                console.log('Error updating user:', error.message);
                 continue;
             }
         }
@@ -63,7 +63,7 @@ const { google } = require('googleapis');
             if (row[0] == '') continue;
             let { error } = await supabase.from('users').update({ ppp: row[2] }).eq('username', row[0]);
             if (error) {
-                console.log('Error updating user:', error);
+                console.log('Error updating user:', error.message);
                 continue;
             }
         }
@@ -89,12 +89,12 @@ const { google } = require('googleapis');
             if (row[0] == '') continue;
             let { error } = await supabase.from('users').update({ frozen: row[2].toLowerCase() == 'true' }).eq('username', row[0]);
             if (error) {
-                console.log('Error updating user:', error);
+                console.log('Error updating user:', error.message);
                 continue;
             }
         }
     }
-
+    
     function updateSheets() {
         return new Promise(res => {
             let finished = 0;
@@ -113,6 +113,42 @@ const { google } = require('googleapis');
     }
     updateSheets();
     setInterval(updateSheets, 1000 * 60 * 15);
+
+    let itemList;
+    async function updateItems () {
+        let { data, error } = await supabase.from('items').select('*').eq('available', true);
+        if (error == null) itemList = data;
+        else {
+            // console.log('Error fetching item list:', error.message);
+            await new Promise(res => setTimeout(res, 1000));
+        }
+        setTimeout(updateItems);
+    }
+    updateItems();
+
+    let auctionList;
+    async function updateAuctions() {
+        let { data, error } = await supabase.from('auctions').select('id::text, start, item (name, type, monster, available, wipe), bids, host, winner, price').eq('open', true);
+        if (error == null) auctionList = data;
+        else {
+            // console.log('Error fetching auction list:', error.message);
+            await new Promise(res => setTimeout(res, 1000));
+        }
+        setTimeout(updateAuctions);
+    }
+    updateAuctions();
+
+    let userList;
+    async function updateUsers() {
+        let { data, error } = await supabase.from('users').select('id::text, username, dkp, ppp, frozen');
+        if (error == null) userList = data;
+        else {
+            // console.log('Error fetching user list:', error.message);
+            await new Promise(res => setTimeout(res, 1000));
+        }
+        setTimeout(updateUsers);
+    }
+    updateUsers();
 
     process.on('uncaughtException', console.error);
 
@@ -224,7 +260,7 @@ const { google } = require('googleapis');
             if (!command) return;
 
             try {
-                await command.autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions);
+                await command.autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList);
             } catch (error) {
                 console.log(error);
                 await interaction.respond([{ name: `[ERROR]: ${error.message}`.slice(0, 100), value: '​' }]);

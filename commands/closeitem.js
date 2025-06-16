@@ -13,11 +13,9 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
+    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
-        let { data: auctionList } = await supabase.from('auctions').select('item!inner(name, monster), open').eq('open', true).ilike('item.name', `%${focusedValue.value}%`).limit(25);
-        if (auctionList == null) auctionList = [];
-        await interaction.respond(auctionList.map(a => ({ name: a.item.name, value: a.item.name })).filter(a => auctions[a.monster] == null).sort((a, b) => a.name > b.name ? 1 : -1));
+        await interaction.respond(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase()) && auctions[a.item.monster] == null).map(a => ({ name: a.item.name, value: a.item.name })).sort((a, b) => a.name > b.name ? 1 : -1).slice(0, 25));
     },
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets) {
         await interaction.deferReply({ ephemeral: true });
