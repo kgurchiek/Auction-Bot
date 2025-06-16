@@ -280,7 +280,7 @@ const { google } = require('googleapis');
             if (auction.DKP && auction.DKP?.message.guildId == message.guildId && auction.DKP?.message.channelId == message.channelId && auction.DKP?.message.id == message.id) foundDKP = true;
             if (auction.PPP && auction.PPP?.message.guildId == message.guildId && auction.PPP?.message.channelId == message.channelId && auction.PPP?.message.id == message.id) foundPPP = true;
             if (!(foundDKP || foundPPP)) continue;
-            if (auctionList.find(a => a.item.name == item)) {
+            if (auctionList.find(a => a.item.name == item) || auctionList.find(a => a.item.monster == item)) {
                 if (foundDKP) auction.DKP.message = await dkpChannel.send({ embeds: [auction.DKP.embed] });
                 if (foundPPP) auction.PPP.message = await pppChannel.send({ embeds: [auction.PPP.embed] });
             } else delete auctions[item];
