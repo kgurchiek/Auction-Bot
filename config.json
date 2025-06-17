@@ -25,7 +25,7 @@
     },
     "google": {
         "credentials": {
-            "type": "service_account",
+            "type": "",
             "project_id": "",
             "private_key_id": "",
             "private_key": "",
@@ -38,15 +38,18 @@
             "universe_domain": ""
         },
         "DKP": {
+            "id": "",
             "sheet": "",
-            "logId": "",
-            "logName": ""
+            "log": ""
         },
         "PPP": {
+            "id": "",
             "sheet": "",
-            "logId": "",
-            "logName": ""
+            "log": ""
         },
-        "tallySheet": ""
+        "tally": {
+            "id": "",
+            "sheet": ""
+        }
     }
 }

@@ -16,22 +16,14 @@ const { google } = require('googleapis');
         ],
     });
     let googleClient = await auth.getClient();
-    let googleToken = await googleClient.getAccessToken();
     let googleSheets = google.sheets({ version: 'v4', auth: googleClient });
 
     let dkpSheet;
     async function updateDKPSheet() {
-        let sheet = (await (await fetch(config.google.DKP.sheet, { headers: { Authorization: `Bearer ${googleToken.token}` }})).text()).split('\n').map(a => {
-            a = a.trim();
-            let row = [''];
-            let state = 0;
-            for (let i = 0; i < a.length; i++) {
-                if (a[i] == '"') state++;
-                if (a[i] == ',' && state % 2 == 0) row.push('');
-                else if (a[i] != '"' || a[i + 1] == '"') row[row.length - 1] += a[i];
-            }
-            return row;
-        });
+        let sheet = (await googleSheets.spreadsheets.values.get({
+            spreadsheetId: config.google.DKP.id,
+            range: config.google.DKP.sheet
+        })).data.values;
         if (sheet[0][1] != 'Lifetime Points') return;
         dkpSheet = sheet.slice(1);
         for (const row of dkpSheet) {
@@ -46,17 +38,10 @@ const { google } = require('googleapis');
 
     let pppSheet;
     async function updatePPPSheet() {
-        let sheet = (await (await fetch(config.google.PPP.sheet, { headers: { Authorization: `Bearer ${googleToken.token}` }})).text()).split('\n').map(a => {
-            a = a.trim();
-            let row = [''];
-            let state = 0;
-            for (let i = 0; i < a.length; i++) {
-                if (a[i] == '"') state++;
-                if (a[i] == ',' && state % 2 == 0) row.push('');
-                else if (a[i] != '"' || a[i + 1] == '"') row[row.length - 1] += a[i];
-            }
-            return row;
-        });
+        let sheet = (await googleSheets.spreadsheets.values.get({
+            spreadsheetId: config.google.PPP.id,
+            range: config.google.PPP.sheet
+        })).data.values;
         if (sheet[0][0] != 'Member') return;
         pppSheet = sheet.slice(1);
         for (const row of pppSheet) {
@@ -71,17 +56,10 @@ const { google } = require('googleapis');
 
     let tallySheet;
     async function updateTallySheet() {
-        let sheet = (await (await fetch(config.google.tallySheet, { headers: { Authorization: `Bearer ${googleToken.token}` }})).text()).split('\n').map(a => {
-            a = a.trim();
-            let row = [''];
-            let state = 0;
-            for (let i = 0; i < a.length; i++) {
-                if (a[i] == '"') state++;
-                if (a[i] == ',' && state % 2 == 0) row.push('');
-                else if (a[i] != '"' || a[i + 1] == '"') row[row.length - 1] += a[i];
-            }
-            return row;
-        });
+        let sheet = (await googleSheets.spreadsheets.values.get({
+            spreadsheetId: config.google.tally.id,
+            range: config.google.tally.sheet
+        })).data.values;
         sheet.push(['Cornbread2100', '', 'FALSE']);
         if (sheet[0][0] != 'Notes') return;
         tallySheet = sheet.slice(7);

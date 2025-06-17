@@ -59,8 +59,8 @@ module.exports = {
             }).eq('item', auction.item.name).eq('open', true));
             if (auction.bids.length > 0) {
                 await googleSheets.spreadsheets.values.append({
-                    spreadsheetId: config.google[auction.item.type].logId,
-                    range: config.google[auction.item.type].logName,
+                    spreadsheetId: config.google[auction.item.type].id,
+                    range: config.google[auction.item.type].log,
                     valueInputOption: 'RAW',
                     resource: {
                         values: [
