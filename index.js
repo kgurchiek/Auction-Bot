@@ -230,7 +230,9 @@ const { google } = require('googleapis');
                     .setColor('#ff0000')
                     .setTitle('Error Executing Command')
                     .setDescription(String(error.message))
-                await interaction.editReply({ embeds: [errorEmbed] })
+                try {
+                    await interaction.editReply({ embeds: [errorEmbed] })
+                } catch (e) {}
             }
         }
         if (interaction.isAutocomplete()) {
@@ -241,7 +243,9 @@ const { google } = require('googleapis');
                 await command.autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList);
             } catch (error) {
                 console.log(error);
-                await interaction.respond([{ name: `[ERROR]: ${error.message}`.slice(0, 100), value: '​' }]);
+                try {
+                    await interaction.respond([{ name: `[ERROR]: ${error.message}`.slice(0, 100), value: '​' }]);
+                } catch (e) {}
             }
         }
         if (interaction.isButton()) {
