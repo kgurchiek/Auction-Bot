@@ -30,6 +30,27 @@ module.exports = {
                 .setTitle('Error')
                 .setDescription(`There are no open auctions for **${monster}**.`);
             await interaction.editReply({ embeds: [errorEmbed] });
+
+            if (auctions[monster]) {
+                if (auctions[monster].DKP) {
+                    let newEmbed = auctions[monster].DKP.embed;
+                    if (newEmbed.data) newEmbed = newEmbed.data;
+                    newEmbed.title = `Auction for ${monster} (Closed)`;
+                    newEmbed.footer = { text: `Closed by ${author.username}` };
+                    auctions[monster].DKP.embed = newEmbed;
+                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed] });
+                }
+                if (auctions[monster].PPP) {
+                    let newEmbed = auctions[monster].PPP.embed;
+                    if (newEmbed.data) newEmbed = newEmbed.data;
+                    newEmbed.title = `Auction for ${monster} (Closed)`;
+                    newEmbed.footer = { text: `Closed by ${author.username}` };
+                    auctions[monster].PPP.embed = newEmbed;
+                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed] });
+                }
+                delete auctions[monster];
+            }
+            
             return;
         }
 

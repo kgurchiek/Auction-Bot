@@ -31,6 +31,22 @@ module.exports = {
                 .setTitle('Error')
                 .setDescription(`There are no open auctions for **${item}**.`);
             await interaction.editReply({ embeds: [errorEmbed] });
+            
+            if (auctions[item]?.[auction.item.type]) {
+                auction.bids.sort((a, b) => b.amount - a.amount);
+                const logEmbed = new EmbedBuilder()
+                    .setColor('#00ff00')
+                    .setTitle(`Auction for ${auction.item.name} (Closed)`)
+                    .addFields(
+                        { name: 'Next Bid', value: auction.bids.length == 0 ? `${config.auction[auction.item.type].min} ${auction.item.type}` : `${auction.bids[0].amount + config.auction[auction.item.type].raise} ${auction.item.type}` },
+                        { name: 'Bids', value: `\`\`\`${auction.bids.length == 0 ? '​' : auction.bids.slice(0, 15).map(a => `${a.user}: ${a.amount} ${auction.item.type}`).join('\n')}${auction.bids.length > 10 ? '\n...' : ''}\`\`\`` }
+                    )
+                    .setFooter({ text: `Closed by ${author.username}` })
+                    .setTimestamp();
+                await auctions[item][auction.item.type].message.edit({ embeds: [logEmbed] });
+                delete auctions[item];
+            }
+
             return;
         }
 
