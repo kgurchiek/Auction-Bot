@@ -9,8 +9,8 @@ module.exports = {
         option.setName('user')
             .setDescription('the user to get information about')
     ),
+    ephemeral: false,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
-        await interaction.deferReply();
         const user = (interaction.options.getUser('user') || interaction.user);
         let { data: account, error } = await supabase.from('users').select('id::text, username, dkp, ppp').eq('id', user.id).limit(1);
 

@@ -32,8 +32,8 @@ module.exports = {
         let user = userList.find(a => a.id == interaction.user.id) || (await supabase.from('users').select('*').eq('id', interaction.user.id).limit(1)).data?.[0];
         await interaction.respond([{ name: user == null ? 'Error: failed to load user data' : `Your balance: ${user.dkp} DKP, ${user.ppp} PPP`, value: '​' }].concat(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: `${a.item.name} (${a.item.wipe ? user[a.item.type.toLowerCase()] : (a.bids[a.bids.length - 1]?.amount + config.auction[a.item.type].raise) || config.auction[a.item.type].min} ${a.item.type})`, value: a.item.name })).slice(0, 24)));
     },
+    ephemeral: true,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
-        await interaction.deferReply({ ephemeral: true });
         bidQueue.push(async () => {
             let item = interaction.options.getString('item');
             if (item.endsWith('DKP)') || item.endsWith('PPP)')) item = item.slice(0, item.lastIndexOf('(') - 1);

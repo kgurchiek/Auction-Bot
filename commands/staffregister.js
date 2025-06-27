@@ -29,9 +29,8 @@ module.exports = {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(usernames.filter(a => a.toLowerCase().includes(focusedValue.value.toLowerCase())).map(choice => ({ name: choice, value: choice })).slice(0, 25));
     },
+    ephemeral: false,
     async execute(interaction, client, author, supabase, pppSheet, dkpSheet, tallySheet) {
-        await interaction.deferReply();
-    
         if (!author.staff) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')

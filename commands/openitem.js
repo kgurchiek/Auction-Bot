@@ -17,8 +17,8 @@ module.exports = {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(itemList.filter(a => a.name.toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: a.name, value: a.name })).slice(0, 25));
     },
+    ephemeral: true,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel) {
-        await interaction.deferReply({ ephemeral: true });
         let itemName = interaction.options.getString('item');
         let { data: item, error } = await supabase.from('items').select('*').eq('name', itemName).eq('available', true).limit(1);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Item', error.message)] });

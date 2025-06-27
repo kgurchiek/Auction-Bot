@@ -20,8 +20,8 @@ module.exports = {
             .setMinValue(1)
             .setMaxValue(100)
     ),
+    ephemeral: false,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
-        await interaction.deferReply();
         const type = interaction.options.getString('type');
         const length = interaction.options.getNumber('length') || 10;
         let { data: auctionList, error } = await supabase.from('auctions').select('end, item!inner(name, type), open, winner, price').eq('open', false).neq('winner', null).eq('item.type', type).order('end', { ascending: false }).limit(length);

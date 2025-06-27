@@ -4,9 +4,8 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('refresh')
     .setDescription('Fetches spreadsheets (staff only)'),
+    ephemeral: false,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets, updateSheets) {
-        await interaction.deferReply();
-
         if (!author.staff) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')

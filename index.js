@@ -188,6 +188,7 @@ const { google } = require('googleapis');
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);
             if (!command) return;
+            await interaction.deferReply({ ephemeral: command.ephemeral })
             
             let members = await guild.members.fetch();
             let guildMember = members.get(interaction.user.id);
@@ -195,7 +196,7 @@ const { google } = require('googleapis');
                 let errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .addFields({ name: 'Error', value: 'You must be a member of the server to use this bot.' });
-                await interaction.reply({ embeds: [errorEmbed] });
+                await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
             
@@ -205,7 +206,7 @@ const { google } = require('googleapis');
                 let errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
                 .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
-                await interaction.reply({ embeds: [errorEmbed] });
+                await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
             user = user[0];
@@ -213,7 +214,7 @@ const { google } = require('googleapis');
                 let errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
                 .addFields({ name: 'Error', value: 'User not found. Use /register to begin.' });
-                await interaction.reply({ embeds: [errorEmbed] })
+                await interaction.editReply({ embeds: [errorEmbed] })
                 return;
             }
             if (user != null) {
@@ -229,8 +230,7 @@ const { google } = require('googleapis');
                     .setColor('#ff0000')
                     .setTitle('Error Executing Command')
                     .setDescription(String(error.message))
-                if (interaction.replied || interaction.deferred) await interaction.editReply({ embeds: [errorEmbed] })
-                else await interaction.reply({ content: '', embeds: [errorEmbed] })
+                await interaction.editReply({ embeds: [errorEmbed] })
             }
         }
         if (interaction.isAutocomplete()) {

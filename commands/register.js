@@ -15,8 +15,8 @@ module.exports = {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(tallySheet.filter(a => a[0].toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: a[0], value: a[0] })).slice(0, 25));
     },
+    ephemeral: false,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
-        await interaction.deferReply();
         const username = interaction.options.getString('username');
 
         if ((await supabase.from('users').select('*').eq('id', interaction.user.id).limit(1)).data[0] != null) {

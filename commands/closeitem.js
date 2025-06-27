@@ -17,8 +17,8 @@ module.exports = {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase()) && auctions[a.item.monster] == null).map(a => ({ name: a.item.name, value: a.item.name })).sort((a, b) => a.name > b.name ? 1 : -1).slice(0, 25));
     },
+    ephemeral: true,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets) {
-        await interaction.deferReply({ ephemeral: true });
         let item = interaction.options.getString('item');
         
         let { data: auction, error } = await supabase.from('auctions').select('bids, item (name, type, monster)').eq('item', item).eq('open', true).limit(1);
