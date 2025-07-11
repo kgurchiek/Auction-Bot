@@ -15,7 +15,8 @@
         "staffRoles": [""],
         "dkpChannel": "",
         "pppChannel": "",
-        "rollChannel": ""
+        "rollChannel": "",
+        "leaderboardChannel": ""
     },
     "auction": {
         "DKP": {

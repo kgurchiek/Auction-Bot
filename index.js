@@ -49,7 +49,28 @@ const { google } = require('googleapis');
             range: config.google.DKP.sheet
         })).data.values;
         if (sheet[0][1] != 'Lifetime Points') return;
-        dkpSheet = sheet.slice(1);
+        dkpSheet = sheet.slice(1).filter(a => a[0] != '');
+        dkpSheet.sort((a, b) => b[2] - a[2]);
+        let messages = Array.from((await leaderboardChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
+        let embeds = [];
+        let longestRank = Math.max(String(dkpSheet.length).length + 1, 'Live Rank'.length);
+        let longestName = dkpSheet.reduce((a, b) => Math.max(a, b[0].split('(')[0].trim().length), 'Member'.length);
+        let longestLifetime = dkpSheet.reduce((a, b) => Math.max(a, b[1].length), 'Lifetime'.length);
+        let longestCurrent = dkpSheet.reduce((a, b) => Math.max(a, b[2].length), 'Current'.length);
+        embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription(`\`\`\`\nLive Rank${' '.repeat(longestRank - 'Live Rank'.length)} | Member${' '.repeat(longestName - 'Member'.length)} | Lifetime${' '.repeat(longestLifetime - 'Lifetime'.length)} | Current${''.repeat(longestCurrent - 'Current'.length)}\n`))
+        dkpSheet.forEach((a, i) => {
+            let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
+            let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a[0].split('(')[0].trim()}${' '.repeat(longestName - a[0].split('(')[0].trim().length)} | ${a[1]}${' '.repeat(longestLifetime - a[1].length)} | ${a[2]}${''.repeat(longestCurrent - a[2].length)}\n`;
+            if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription('```'));
+            embeds[embeds.length - 1].data.description += string;
+        })
+        embeds.forEach((a, i) => {
+            a.data.description += '```';
+            if (messages[i]) messages[i].edit({ embeds: [a] });
+            else leaderboardChannel.send({ embeds: [a] })
+        });
+        for (let message of messages.slice(embeds.length)) await message.delete();
+
         for (const row of dkpSheet) {
             if (row[0] == '') continue;
             let cost = 0;
@@ -106,7 +127,6 @@ const { google } = require('googleapis');
         await Promise.all([updateDKPSheet(), updatePPPSheet(), updateTallySheet()]);
         setTimeout(updateSheets, 1000 * 10);
     }
-    updateSheets();
 
     let itemList;
     async function updateItems () {
@@ -160,6 +180,7 @@ const { google } = require('googleapis');
     let dkpChannel;
     let pppChannel;
     let rollChannel;
+    let leaderboardChannel;
     client.once(Events.ClientReady, async () => {
         console.log(`[Bot]: ${client.user.tag}`);
         console.log(`[Servers]: ${client.guilds.cache.size}`);
@@ -167,6 +188,7 @@ const { google } = require('googleapis');
         dkpChannel = await client.channels.fetch(config.discord.dkpChannel);
         pppChannel = await client.channels.fetch(config.discord.pppChannel);
         rollChannel = await client.channels.fetch(config.discord.rollChannel);
+        leaderboardChannel = await client.channels.fetch(config.discord.leaderboardChannel);
 
         for (const item in auctions) {
             if (auctions[item].DKP) {
@@ -200,6 +222,8 @@ const { google } = require('googleapis');
                 }
             }
         }
+
+        updateSheets();
     });
 
     client.on(Events.InteractionCreate, async interaction => {
