@@ -50,8 +50,9 @@ const { google } = require('googleapis');
         })).data.values;
         if (sheet[0][1] != 'Lifetime Points') return;
         dkpSheet = sheet.slice(1).filter(a => a[0] != '');
+
         dkpSheet.sort((a, b) => b[2] - a[2]);
-        let messages = Array.from((await leaderboardChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
+        let messages = Array.from((await dkpLeaderboard.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
         let embeds = [];
         let longestRank = Math.max(String(dkpSheet.length).length + 1, 'Live Rank'.length);
         let longestName = dkpSheet.reduce((a, b) => Math.max(a, b[0].split('(')[0].trim().length), 'Member'.length);
@@ -61,13 +62,13 @@ const { google } = require('googleapis');
         dkpSheet.forEach((a, i) => {
             let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
             let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a[0].split('(')[0].trim()}${' '.repeat(longestName - a[0].split('(')[0].trim().length)} | ${a[1]}${' '.repeat(longestLifetime - a[1].length)} | ${a[2]}${''.repeat(longestCurrent - a[2].length)}\n`;
-            if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription('```'));
+            if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
             embeds[embeds.length - 1].data.description += string;
         })
         embeds.forEach((a, i) => {
             a.data.description += '```';
             if (messages[i]) messages[i].edit({ embeds: [a] });
-            else leaderboardChannel.send({ embeds: [a] })
+            else dkpLeaderboard.send({ embeds: [a] })
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
 
@@ -91,7 +92,29 @@ const { google } = require('googleapis');
             range: config.google.PPP.sheet
         })).data.values;
         if (sheet[0][0] != 'Member') return;
-        pppSheet = sheet.slice(1);
+        pppSheet = sheet.slice(1).filter(a => a[0] != '');
+
+        pppSheet.sort((a, b) => b[2] - a[2]);
+        let messages = Array.from((await pppLeaderboard.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
+        let embeds = [];
+        let longestRank = Math.max(String(pppSheet.length).length + 1, 'Live Rank'.length);
+        let longestName = pppSheet.reduce((a, b) => Math.max(a, b[0].split('(')[0].trim().length), 'Member'.length);
+        let longestLifetime = pppSheet.reduce((a, b) => Math.max(a, b[1].length), 'Lifetime'.length);
+        let longestCurrent = pppSheet.reduce((a, b) => Math.max(a, b[2].length), 'Current'.length);
+        embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription(`\`\`\`\nLive Rank${' '.repeat(longestRank - 'Live Rank'.length)} | Member${' '.repeat(longestName - 'Member'.length)} | Lifetime${' '.repeat(longestLifetime - 'Lifetime'.length)} | Current${''.repeat(longestCurrent - 'Current'.length)}\n`))
+        pppSheet.forEach((a, i) => {
+            let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
+            let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a[0].split('(')[0].trim()}${' '.repeat(longestName - a[0].split('(')[0].trim().length)} | ${a[1]}${' '.repeat(longestLifetime - a[1].length)} | ${a[2]}${''.repeat(longestCurrent - a[2].length)}\n`;
+            if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
+            embeds[embeds.length - 1].data.description += string;
+        })
+        embeds.forEach((a, i) => {
+            a.data.description += '```';
+            if (messages[i]) messages[i].edit({ embeds: [a] });
+            else pppLeaderboard.send({ embeds: [a] })
+        });
+        for (let message of messages.slice(embeds.length)) await message.delete();
+
         for (const row of pppSheet) {
             if (row[0] == '') continue;
             let cost = 0;
@@ -111,7 +134,7 @@ const { google } = require('googleapis');
             range: config.google.tally.sheet
         })).data.values;
         if (sheet[0][0] != 'Notes') return;
-        tallySheet = sheet.slice(7);
+        tallySheet = sheet.slice(7).filter(a => a[0] != '');
         for (const row of tallySheet) {
             if (row[0] == '') continue;
             let { error } = await supabase.from(config.supabase.tables.users).update({ frozen: row[2].toLowerCase() == 'true' }).eq('username', row[0]);
@@ -180,7 +203,8 @@ const { google } = require('googleapis');
     let dkpChannel;
     let pppChannel;
     let rollChannel;
-    let leaderboardChannel;
+    let dkpLeaderboard;
+    let pppLeaderboard;
     client.once(Events.ClientReady, async () => {
         console.log(`[Bot]: ${client.user.tag}`);
         console.log(`[Servers]: ${client.guilds.cache.size}`);
@@ -188,7 +212,8 @@ const { google } = require('googleapis');
         dkpChannel = await client.channels.fetch(config.discord.dkpChannel);
         pppChannel = await client.channels.fetch(config.discord.pppChannel);
         rollChannel = await client.channels.fetch(config.discord.rollChannel);
-        leaderboardChannel = await client.channels.fetch(config.discord.leaderboardChannel);
+        dkpLeaderboard = await client.channels.fetch(config.discord.leaderboard.DKP);
+        pppLeaderboard = await client.channels.fetch(config.discord.leaderboard.PPP);
 
         for (const item in auctions) {
             if (auctions[item].DKP) {

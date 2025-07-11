@@ -16,7 +16,10 @@
         "dkpChannel": "",
         "pppChannel": "",
         "rollChannel": "",
-        "leaderboardChannel": ""
+        "leaderboard": {
+            "DKP": "",
+            "PPP": ""
+        }
     },
     "auction": {
         "DKP": {
