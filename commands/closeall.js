@@ -88,7 +88,7 @@ module.exports = {
                 winner = winners.sort((a, b) => b.roll - a.roll)[0];
                 rollEmbed.data.description += `\n\n**Winner:** ${winner.user}`;
                 await message.edit({ embeds: [rollEmbed] });
-            } else winner = winners[0];
+            } else winner = winners.sort((a, b) => b.amount - a.amount)[0];
             ({ error } = await supabase.from(config.supabase.tables.auctions).update({
                 open: false,
                 end: 'now()',
