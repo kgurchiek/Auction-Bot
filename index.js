@@ -102,7 +102,7 @@ const { google } = require('googleapis');
         let longestLifetime = pppSheet.reduce((a, b) => Math.max(a, b[1].length), 'Lifetime'.length);
         let longestCurrent = pppSheet.reduce((a, b) => Math.max(a, b[2].length), 'Current'.length);
         embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription(`\`\`\`\nLive Rank${' '.repeat(longestRank - 'Live Rank'.length)} | Member${' '.repeat(longestName - 'Member'.length)} | Lifetime${' '.repeat(longestLifetime - 'Lifetime'.length)} | Current${''.repeat(longestCurrent - 'Current'.length)}\n`))
-        pppSheet.forEach((a, i) => {
+        pppSheet.slice(0, 75).forEach((a, i) => {
             let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
             let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a[0].split('(')[0].trim()}${' '.repeat(longestName - a[0].split('(')[0].trim().length)} | ${a[1]}${' '.repeat(longestLifetime - a[1].length)} | ${a[2]}${''.repeat(longestCurrent - a[2].length)}\n`;
             if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
