@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const config = require('../config.json');
 const { errorEmbed } = require('../commonFunctions.js');
 
 module.exports = {
@@ -17,7 +18,7 @@ module.exports = {
     },
     ephemeral: false,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
-        let { data: auction, error } = await supabase.from('auctions').select('start, item, bids, host (id, username)').eq('item', interaction.options.getString('auction')).eq('open', true).limit(1);
+        let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('start, item, bids, host (id, username)').eq('item', interaction.options.getString('auction')).eq('open', true).limit(1);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
         auction = auction[0];
         if (auction == null) {

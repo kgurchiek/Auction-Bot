@@ -5,8 +5,8 @@ const config = require('../config.json');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('closemonster')
-    .setDescription('closes an auction on a monster')
+    .setName('closeall')
+    .setDescription('closes auctions on RareEx items from a monster')
     .addStringOption(option =>
         option.setName('monster')
             .setDescription('the monster to close bidding on')
@@ -18,10 +18,10 @@ module.exports = {
         await interaction.respond(auctionList.filter(a => a.item.monster.toLowerCase().includes(focusedValue.value.toLowerCase())).filter((a, i, arr) => !arr.slice(0, i).map(a => a.item.monster).includes(a.item.monster) && auctions[a.item.monster] != null).map(a => ({ name: a.item.monster, value: a.item.monster })).slice(0, 25));
     },
     ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, updateSheets, itemList) {
+    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets) {
         let monster = interaction.options.getString('monster');
 
-        let { data: auctionList, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item!inner(name, type, monster, tradeable)').eq('item.monster', monster).eq('open', true);
+        let { data: auctionList, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item!inner(name, type, monster)').eq('item.monster', monster).eq('open', true);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Monster', error.message)] });
 
         if (auctionList.length == 0) {
@@ -58,7 +58,6 @@ module.exports = {
         // let embeds = [];
         let closed = [];
         for (const auction of auctionList) {
-            if (auction.item.tradeable) continue;
             if (auction.item.type == 'DKP' && author.frozen) {
                 frozen++;
                 // const errorEmbed = new EmbedBuilder()
@@ -162,50 +161,25 @@ module.exports = {
         await interaction.editReply({ embeds: [newEmbed] });
 
         if (auctionList.length > 0 && auctions[monster]) {
-            if (closed.length == auctionList.length) {
-                if (auctions[monster].DKP) {
-                    let newEmbed = auctions[monster].DKP.embed;
-                    if (newEmbed.data) newEmbed = newEmbed.data;
-                    newEmbed.title = `Auction for ${monster} (Closed)`;
-                    newEmbed.footer = { text: `Closed by ${author.username}` };
-                    auctions[monster].DKP.embed = newEmbed;
-                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed] });
-                }
-                if (auctions[monster].PPP) {
-                    let newEmbed = auctions[monster].PPP.embed;
-                    if (newEmbed.data) newEmbed = newEmbed.data;
-                    newEmbed.title = `Auction for ${monster} (Closed)`;
-                    newEmbed.footer = { text: `Closed by ${author.username}` };
-                    auctions[monster].PPP.embed = newEmbed;
-                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed] });
-                }
-                delete auctions[monster];
-            } else {
-                if (auctions[monster].DKP) {
-                    let newEmbed = auctions[monster].DKP.embed;
-                    if (newEmbed.data) newEmbed = newEmbed.data;
-                    for (let field of newEmbed.fields) {
-                        if (field.name.endsWith('(Closed)')) continue;
-                        let item = itemList.find(a => a.name == field.name);
-                        if (item == null || item.tradeable) continue;
-                        field.name = `${field.name} (Closed)`;
-                    }
-                    auctions[monster].DKP.embed = newEmbed;
-                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed] });
-                }
-                if (auctions[monster].PPP) {
-                    let newEmbed = auctions[monster].PPP.embed;
-                    if (newEmbed.data) newEmbed = newEmbed.data;
-                    for (let field of newEmbed.fields) {
-                        if (field.name.endsWith('(Closed)')) continue;
-                        let item = itemList.find(a => a.name == field.name);
-                        if (item == null || item.tradeable) continue;
-                        field.name = `${field.name} (Closed)`;
-                    }
-                    auctions[monster].PPP.embed = newEmbed;
-                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed] });
-                }
+            if (auctions[monster].DKP) {
+                let newEmbed = auctions[monster].DKP.embed;
+                if (newEmbed.data) newEmbed = newEmbed.data;
+                newEmbed.title = `Auction for ${monster} (Closed)`;
+                newEmbed.footer = { text: `Closed by ${author.username}` };
+                for (let field of newEmbed.fields) if (field.name.endsWith('(Closed)')) field.name = field.name.slice(0, -9);
+                auctions[monster].DKP.embed = newEmbed;
+                await auctions[monster].DKP.message.edit({ embeds: [newEmbed] });
             }
+            if (auctions[monster].PPP) {
+                let newEmbed = auctions[monster].PPP.embed;
+                if (newEmbed.data) newEmbed = newEmbed.data;
+                newEmbed.title = `Auction for ${monster} (Closed)`;
+                newEmbed.footer = { text: `Closed by ${author.username}` };
+                for (let field of newEmbed.fields) if (field.name.endsWith('(Closed)')) field.name = field.name.slice(0, -9);
+                auctions[monster].PPP.embed = newEmbed;
+                await auctions[monster].PPP.message.edit({ embeds: [newEmbed] });
+            }
+            delete auctions[monster];
         }
         try {
             fs.writeFileSync('./auctions.json', JSON.stringify(auctions, '', '  '));

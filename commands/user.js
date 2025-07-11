@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const config = require('../config.json');
 const { errorEmbed } = require('../commonFunctions.js');
 
 module.exports = {
@@ -12,7 +13,7 @@ module.exports = {
     ephemeral: false,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
         const user = (interaction.options.getUser('user') || interaction.user);
-        let { data: account, error } = await supabase.from('users').select('id::text, username, dkp, ppp').eq('id', user.id).limit(1);
+        let { data: account, error } = await supabase.from(config.supabase.tables.users).select('id::text, username, dkp, ppp').eq('id', user.id).limit(1);
 
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching User'. error.message)] });
         account = account[0];

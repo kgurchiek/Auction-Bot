@@ -1,4 +1,4 @@
-const { Client, Partials, Collection, Events, GatewayIntentBits, EmbedBuilder, ActivityType } = require('discord.js');
+const { Client, Partials, Collection, Events, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
@@ -18,6 +18,30 @@ const { google } = require('googleapis');
     let googleClient = await auth.getClient();
     let googleSheets = google.sheets({ version: 'v4', auth: googleClient });
 
+    let auctionSheet = {
+        DKP: null,
+        PPP: null
+    }
+    async function updateAuctionSheet() {
+        try {
+            auctionSheet.DKP = (await googleSheets.spreadsheets.values.get({
+                spreadsheetId: config.google.DKP.id,
+                range: config.google.DKP.log
+            })).data.values;
+        } catch (err) {
+            console.log('Error fetching auctions:', err);
+        }
+
+        try {
+            auctionSheet.PPP = (await googleSheets.spreadsheets.values.get({
+                spreadsheetId: config.google.PPP.id,
+                range: config.google.PPP.log
+            })).data.values;
+        } catch (err) {
+            console.log('Error fetching auctions:', err);
+        }
+    }
+
     let dkpSheet;
     async function updateDKPSheet() {
         let sheet = (await googleSheets.spreadsheets.values.get({
@@ -28,9 +52,12 @@ const { google } = require('googleapis');
         dkpSheet = sheet.slice(1);
         for (const row of dkpSheet) {
             if (row[0] == '') continue;
-            let { error } = await supabase.from('users').update({ dkp: row[2] }).eq('username', row[0]);
+            let cost = 0;
+            for (let item of auctionSheet.DKP) if (item[0] == row[0] && item.length < 7) cost += parseFloat(item[3]);
+            // console.log(row[0], cost, 'DKP');
+            let { error } = await supabase.from(config.supabase.tables.users).update({ dkp: parseFloat(row[2]) - cost }).eq('username', row[0]);
             if (error) {
-                console.log('Error updating user:', error.message);
+                console.log('Error updating dkp:', error.message);
                 continue;
             }
         }
@@ -46,9 +73,11 @@ const { google } = require('googleapis');
         pppSheet = sheet.slice(1);
         for (const row of pppSheet) {
             if (row[0] == '') continue;
-            let { error } = await supabase.from('users').update({ ppp: row[2] }).eq('username', row[0]);
+            let cost = 0;
+            for (let item of auctionSheet.PPP) if (item[0] == row[0] && item.length < 7) cost += parseFloat(item[3]);
+            let { error } = await supabase.from(config.supabase.tables.users).update({ ppp: parseFloat(row[2]) - cost }).eq('username', row[0]);
             if (error) {
-                console.log('Error updating user:', error.message);
+                console.log('Error updating ppp:', error.message);
                 continue;
             }
         }
@@ -60,41 +89,28 @@ const { google } = require('googleapis');
             spreadsheetId: config.google.tally.id,
             range: config.google.tally.sheet
         })).data.values;
-        sheet.push(['Cornbread2100', '', 'FALSE']);
         if (sheet[0][0] != 'Notes') return;
         tallySheet = sheet.slice(7);
         for (const row of tallySheet) {
             if (row[0] == '') continue;
-            let { error } = await supabase.from('users').update({ frozen: row[2].toLowerCase() == 'true' }).eq('username', row[0]);
+            let { error } = await supabase.from(config.supabase.tables.users).update({ frozen: row[2].toLowerCase() == 'true' }).eq('username', row[0]);
             if (error) {
-                console.log('Error updating user:', error.message);
+                console.log('Error updating freeze:', error.message);
                 continue;
             }
         }
     }
-    
-    function updateSheets() {
-        return new Promise(res => {
-            let finished = 0;
-            updateDKPSheet()
-                .then(() => finished++);
-            updatePPPSheet()
-                .then(() => finished++);
-            updateTallySheet()
-                .then(() => finished++);
-            let interval = setInterval(() => {
-                if (finished < 3) return;
-                clearInterval(interval);
-                res();
-            })
-        });
+
+    async function updateSheets() {
+        await updateAuctionSheet();
+        await Promise.all([updateDKPSheet(), updatePPPSheet(), updateTallySheet()]);
+        setTimeout(updateSheets, 1000 * 10);
     }
     updateSheets();
-    setInterval(updateSheets, 1000 * 60 * 15);
 
     let itemList;
     async function updateItems () {
-        let { data, error } = await supabase.from('items').select('*').eq('available', true);
+        let { data, error } = await supabase.from(config.supabase.tables.items).select('*').eq('available', true);
         if (error == null) itemList = data;
         else {
             // console.log('Error fetching item list:', error.message);
@@ -106,7 +122,7 @@ const { google } = require('googleapis');
 
     let auctionList;
     async function updateAuctions() {
-        let { data, error } = await supabase.from('auctions').select('id::text, start, item (name, type, monster, available, wipe), bids, host, winner, price').eq('open', true);
+        let { data, error } = await supabase.from(config.supabase.tables.auctions).select('id::text, start, item (name, type, monster, available, wipe), bids, host, winner, price').eq('open', true);
         if (error == null) auctionList = data;
         else {
             // console.log('Error fetching auction list:', error.message);
@@ -118,7 +134,7 @@ const { google } = require('googleapis');
 
     let userList;
     async function updateUsers() {
-        let { data, error } = await supabase.from('users').select('id::text, username, dkp, ppp, frozen');
+        let { data, error } = await supabase.from(config.supabase.tables.users).select('id::text, username, dkp, ppp, frozen');
         if (error == null) userList = data;
         else {
             // console.log('Error fetching user list:', error.message);
@@ -143,12 +159,14 @@ const { google } = require('googleapis');
     let guild;
     let dkpChannel;
     let pppChannel;
+    let rollChannel;
     client.once(Events.ClientReady, async () => {
         console.log(`[Bot]: ${client.user.tag}`);
         console.log(`[Servers]: ${client.guilds.cache.size}`);
         guild = await client.guilds.fetch(config.discord.server);
         dkpChannel = await client.channels.fetch(config.discord.dkpChannel);
         pppChannel = await client.channels.fetch(config.discord.pppChannel);
+        rollChannel = await client.channels.fetch(config.discord.rollChannel);
 
         for (const item in auctions) {
             if (auctions[item].DKP) {
@@ -200,7 +218,7 @@ const { google } = require('googleapis');
                 return;
             }
             
-            let { data: user, error } = await supabase.from('users').select('id::text, username, dkp, ppp, frozen').eq('id', interaction.user.id).limit(1);
+            let { data: user, error } = await supabase.from(config.supabase.tables.users).select('id::text, username, dkp, ppp, frozen').eq('id', interaction.user.id).limit(1);
             if (error) {
                 console.log(error);
                 let errorEmbed = new EmbedBuilder()
@@ -223,7 +241,7 @@ const { google } = require('googleapis');
             }
             
             try {
-                await command.execute(interaction, client, user, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets, updateSheets);
+                await command.execute(interaction, client, user, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, updateSheets, itemList, auctionSheet);
             } catch (error) {
                 console.log(error);
                 var errorEmbed = new EmbedBuilder()
@@ -240,7 +258,7 @@ const { google } = require('googleapis');
             if (!command) return;
 
             try {
-                await command.autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList);
+                await command.autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList, auctionSheet);
             } catch (error) {
                 console.log(error);
                 try {

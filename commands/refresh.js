@@ -5,7 +5,7 @@ module.exports = {
     .setName('refresh')
     .setDescription('Fetches spreadsheets (staff only)'),
     ephemeral: false,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets, updateSheets) {
+    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, updateSheets) {
         if (!author.staff) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')

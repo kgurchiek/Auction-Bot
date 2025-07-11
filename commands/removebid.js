@@ -19,7 +19,7 @@ module.exports = {
         await interaction.respond(bidList.map(a => ({ name: `${a.user}: ${a.item} (${a.amount} ${a.type})`, value: `${a.item}:${a.user}` })).filter(a => a.name.toLowerCase().includes(focusedValue.value.toLowerCase())).sort((a, b) => a.name > b.name ? 1 : -1).slice(0, 25));
     },
     ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets) {
+    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets) {
         let bid = interaction.options.getString('bid').split(':');
         let username = bid.splice(bid.length - 1);
         let item = bid.join(':');
@@ -42,7 +42,7 @@ module.exports = {
             return;
         }
 
-        let { data: auction, error } = await supabase.from('auctions').select('bids, item (name, type, monster), host').eq('item', item).eq('open', true).limit(1);
+        let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item (name, type, monster), host').eq('item', item).eq('open', true).limit(1);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
         auction = auction[0];
 
@@ -66,7 +66,7 @@ module.exports = {
         }
         auction.bids.splice(index, 1);
         
-        ({ error } = await supabase.from('auctions').update({
+        ({ error } = await supabase.from(config.supabase.tables.auctions).update({
             bids: auction.bids,
             winner: auction.bids.length == 0 ? null : auction.bids.filter(a => a.amount == auction.bids[auction.bids.length - 1].amount).map(a => a.user).join(', '),
             price: auction.bids.length == 0 ? null : auction.bids[auction.bids.length - 1].amount

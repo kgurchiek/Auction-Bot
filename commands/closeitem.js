@@ -18,10 +18,10 @@ module.exports = {
         await interaction.respond(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase()) && auctions[a.item.monster] == null).map(a => ({ name: a.item.name, value: a.item.name })).sort((a, b) => a.name > b.name ? 1 : -1).slice(0, 25));
     },
     ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, googleSheets) {
+    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets) {
         let item = interaction.options.getString('item');
         
-        let { data: auction, error } = await supabase.from('auctions').select('bids, item (name, type, monster)').eq('item', item).eq('open', true).limit(1);
+        let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item (name, type, monster)').eq('item', item).eq('open', true).limit(1);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
         auction = auction[0];
 
@@ -61,11 +61,30 @@ module.exports = {
             return;
         }
 
-        ({ error } = await supabase.from('auctions').update({
+        let winners = auction.bids.filter(a => a.amount == auction.bids[auction.bids.length - 1].amount);
+        let winner;
+        if (winners.length > 1) {
+            let rollEmbed = new EmbedBuilder()
+                .setColor('#00ff00')
+                .setTitle(`Rolls for ${auction.item.name}`);
+            let message = await rollChannel.send({ embeds: [rollEmbed] });
+            for (let item of winners) {
+                await message.edit({ embeds: [rollEmbed] });
+                do {
+                    item.roll = Math.floor(Math.random() * 1000)
+                } while (winners.filter(a => a.roll == item.roll).length > 1);
+                rollEmbed.data.description = `${rollEmbed.data.description || ''}\n${item.user}: ${item.roll}`.trim();
+                await message.edit({ embeds: [rollEmbed] });
+            }
+            winner = winners.sort((a, b) => b.roll - a.roll)[0];
+            rollEmbed.data.description += `\n\n**Winner:** ${winner.user}`;
+            await message.edit({ embeds: [rollEmbed] });
+        } else winner = winners[0];
+        ({ error } = await supabase.from(config.supabase.tables.auctions).update({
             open: false,
             end: 'now()',
-            winner: auction.bids.length == 0 ? null : auction.bids.filter(a => a.amount == auction.bids[auction.bids.length - 1].amount).map(a => a.user).join(', '),
-            price: auction.bids.length == 0 ? null : auction.bids[auction.bids.length - 1].amount,
+            winner: winner?.user,
+            price: winner?.amount,
             closer: author.username
         }).eq('item', auction.item.name).eq('open', true));
         if (auction.bids.length > 0) {
@@ -76,10 +95,10 @@ module.exports = {
                 resource: {
                     values: [
                         [
-                            auction.bids.filter(a => a.amount == auction.bids[auction.bids.length - 1].amount).map(a => a.user).join(', '),
+                            winner.user,
                             auction.item.name,
                             auction.item.monster,
-                            `${auction.bids[auction.bids.length - 1].amount} ${auction.item.type.toLowerCase() == 'dkp' ? 'dkp' : 'PPP'}`,
+                            `${winner.amount} ${auction.item.type.toLowerCase() == 'dkp' ? 'dkp' : 'PPP'}`,
                             new Date().toLocaleString()
                         ]
                     ]

@@ -51,7 +51,7 @@ module.exports = {
             if (item.endsWith('DKP)') || item.endsWith('PPP)')) item = item.slice(0, item.lastIndexOf('(') - 1);
             let amount = interaction.options.getNumber('amount');
 
-            let { data: user, error } = await supabase.from('users').select('id::text, username, dkp, ppp').eq('id', interaction.options.getUser('user').id).limit(1);
+            let { data: user, error } = await supabase.from(config.supabase.tables.users).select('id::text, username, dkp, ppp').eq('id', interaction.options.getUser('user').id).limit(1);
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching User', error.message)] });
             user = user[0];
             if (user == null) {
@@ -64,7 +64,7 @@ module.exports = {
             }
 
             let auction;
-            ({ data: auction, error } = await supabase.from('auctions').select('id, item!inner(name, type, monster, wipe), bids, host').eq('item.name', item).eq('open', true).limit(1));
+            ({ data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('id, item!inner(name, type, monster, wipe), bids, host').eq('item.name', item).eq('open', true).limit(1));
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
             auction = auction[0];
             if (auction == null) {
@@ -95,7 +95,7 @@ module.exports = {
             }
 
             let userBids;
-            ({ data: userBids, error } = await supabase.from('auctions').select('id, bids, item!inner(name, type, monster), winner, price, host').eq('open', true).eq('item.type', auction.item.type).neq('item.name', auction.item.name).like('winner', `%${user.username}%`));
+            ({ data: userBids, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item!inner(name, type, monster), winner, price, host').eq('open', true).eq('item.type', auction.item.type).neq('item.name', auction.item.name).like('winner', `%${user.username}%`));
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching User\'s Bids', error.message)] });
             userBids = userBids.filter(a => a.winner.split(', ').includes(user.username));
             let cost = userBids.reduce((a, b) => a + b.price, 0);
@@ -108,17 +108,17 @@ module.exports = {
                     }
                     while (true) {
                         if (auction.bids.length == 0) break;
-                        let { data: newWinner, error } = await supabase.from('users').select('id::text, username, dkp, ppp').eq('username', auction.bids[auction.bids.length - 1].user);
+                        let { data: newWinner, error } = await supabase.from(config.supabase.tables.users).select('id::text, username, dkp, ppp').eq('username', auction.bids[auction.bids.length - 1].user);
                         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error fetching new winner', error.message)] });
                         newWinner = newWinner[0];
-                        ({ data: userBids, error } = await supabase.from('auctions').select('id, bids, item!inner(name, type, monster), winner, price, host').eq('open', true).eq('item.type', auction.item.type).like('winner', `%${newWinner.username}%`));
+                        ({ data: userBids, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item!inner(name, type, monster), winner, price, host').eq('open', true).eq('item.type', auction.item.type).like('winner', `%${newWinner.username}%`));
                         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error fetching new winner\'s bids:', error.message)] });
                         userBids = userBids.filter(a => a.winner.split(', ').includes(newWinner.username));
                         let cost = userBids.reduce((a, b) => a + b.price, 0) + auction.bids[auction.bids.length - 1].amount;
                         if (cost > newWinner[auction.item.type.toLowerCase()]) auction.bids = auction.bids.slice(0, auction.bids.length - 1);
                         else break;
                     }
-                    ({ data: bids, error } = await supabase.from('auctions').update({
+                    ({ data: bids, error } = await supabase.from(config.supabase.tables.auctions).update({
                         bids: auction.bids,
                         winner: auction.bids.length == 0 ? null : auction.bids.filter(a => a.amount == auction.bids[auction.bids.length - 1].amount).map(a => a.user).join(', '),
                         price: auction.bids.length == 0 ? null : auction.bids[auction.bids.length - 1].amount
@@ -182,7 +182,7 @@ module.exports = {
             }
 
             auction.bids.push({ user: user.username, amount });
-            ({ error } = await supabase.from('auctions').update({
+            ({ error } = await supabase.from(config.supabase.tables.auctions).update({
                 bids: auction.bids,
                 winner: auction.bids.filter(a => a.amount == amount).map(a => a.user).join(', '),
                 price: amount

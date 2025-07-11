@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const config = require('../config.json');
 const { errorEmbed } = require('../commonFunctions.js');
 
 module.exports = {
@@ -34,7 +35,7 @@ module.exports = {
             return;
         }
 
-        let { error } = await supabase.from('users').update({ username: name }).eq('id', user.id);
+        let { error } = await supabase.from(config.supabase.tables.users).update({ username: name }).eq('id', user.id);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Updating User', error.message)] });
         let embed = new EmbedBuilder()
             .setColor('#00ff00')

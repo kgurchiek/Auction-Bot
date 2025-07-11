@@ -22,7 +22,7 @@ module.exports = {
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel) {
         const monster = interaction.options.getString('monster');
         
-        let { data: items, error } = await supabase.from('items').select('*').eq('monster', monster);
+        let { data: items, error } = await supabase.from(config.supabase.tables.items).select('*').eq('monster', monster);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Monster', error.message)] });
 
         if (items.length == 0) {
@@ -51,7 +51,7 @@ module.exports = {
             }
         
             let auction;
-            ({ data: auction, error } = await supabase.from('auctions').select('*').eq('item', item.name).eq('open', true).limit(1));
+            ({ data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('*').eq('item', item.name).eq('open', true).limit(1));
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auctions', error.message)] });
             auction = auction[0];
             if (auction != null) {
@@ -64,7 +64,7 @@ module.exports = {
                 // embeds.push(errorEmbed);
                 continue;
             }
-            ({ error } = await supabase.from('auctions').insert({ item: item.name, host: author.username }));
+            ({ error } = await supabase.from(config.supabase.tables.auctions).insert({ item: item.name, host: author.username }));
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Creating Auction', error.message)] });
             // const newEmbed = new EmbedBuilder()
             //     .setColor('#00ff00')
@@ -83,7 +83,7 @@ module.exports = {
 
         if (opened.length == 0) return;
         let auction;
-        ({ data: auction, error } = await supabase.from('auctions').select('item!inner(name, monster), bids').eq('item.monster', monster).eq('open', true));
+        ({ data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('item!inner(name, monster), bids').eq('item.monster', monster).eq('open', true));
         if (error) return await interaction.editReply({ content: '', embeds: [newEmbed, errorEmbed('Error Fetching Auctions', error.message)] });
 
         const dkpEmbed = new EmbedBuilder()

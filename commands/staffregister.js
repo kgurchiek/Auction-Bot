@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const config = require('../config.json');
 const { errorEmbed } = require('../commonFunctions.js');
 
 module.exports = {
@@ -45,14 +46,14 @@ module.exports = {
         const dkp = interaction.options.getNumber('dkp');
         const ppp = interaction.options.getNumber('ppp');
 
-        if ((await supabase.from('users').select('*').eq('id', user.id).limit(1)).data[0] != null) {
+        if ((await supabase.from(config.supabase.tables.users).select('*').eq('id', user.id).limit(1)).data[0] != null) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
                 .addFields({ name: 'Error', value: 'This user already has an account.' });
             await interaction.editReply({ content: '', embeds: [errorEmbed] });
             return;
         }
-        let account = (await supabase.from('users').select('id::text').eq('username', username).limit(1)).data[0];
+        let account = (await supabase.from(config.supabase.tables.users).select('id::text').eq('username', username).limit(1)).data[0];
         if (account != null) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
@@ -63,7 +64,7 @@ module.exports = {
 
         let error;
         try {
-            let response = await supabase.from('users').insert({ id: user.id, username: username, dkp: dkp || dkpSheet.find(a => a[0] == username)?.[2] || 0, ppp: ppp || pppSheet.find(a => a[0] == username)?.[2] || 0, frozen: false });
+            let response = await supabase.from(config.supabase.tables.users).insert({ id: user.id, username: username, dkp: dkp || dkpSheet.find(a => a[0] == username)?.[2] || 0, ppp: ppp || pppSheet.find(a => a[0] == username)?.[2] || 0, frozen: false });
             
             if (response.error) error = response.error;
             else {

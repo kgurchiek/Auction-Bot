@@ -20,7 +20,7 @@ module.exports = {
     ephemeral: true,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel) {
         let itemName = interaction.options.getString('item');
-        let { data: item, error } = await supabase.from('items').select('*').eq('name', itemName).eq('available', true).limit(1);
+        let { data: item, error } = await supabase.from(config.supabase.tables.items).select('*').eq('name', itemName).eq('available', true).limit(1);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Item', error.message)] });
         item = item[0];
 
@@ -43,7 +43,7 @@ module.exports = {
         }
     
         let auction;
-        ({ data: auction, error } = await supabase.from('auctions').select('*').eq('item', item.name).eq('open', true).limit(1));
+        ({ data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('*').eq('item', item.name).eq('open', true).limit(1));
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auctions', error.message)] });
         auction = auction[0];
         if (auction != null) {
@@ -54,7 +54,7 @@ module.exports = {
             await interaction.editReply({ embeds: [errorEmbed] });
             return;
         }
-        ({ error } = await supabase.from('auctions').insert({ item: item.name, host: author.username }));
+        ({ error } = await supabase.from(config.supabase.tables.auctions).insert({ item: item.name, host: author.username }));
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Creating Auction', error.message)] });
         const newEmbed = new EmbedBuilder()
             .setColor('#00ff00')

@@ -1,7 +1,12 @@
 {
     "supabase": {
         "url": "",
-        "key": ""
+        "key": "",
+        "tables": {
+            "users": "users",
+            "items": "items",
+            "auctions": "auctions"
+        }
     },
     "discord": {
         "token": "",
@@ -9,7 +14,8 @@
         "server": "",
         "staffRoles": [""],
         "dkpChannel": "",
-        "pppChannel": ""
+        "pppChannel": "",
+        "rollChannel": ""
     },
     "auction": {
         "DKP": {
