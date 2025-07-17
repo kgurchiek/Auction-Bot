@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { errorEmbed } = require('../commonFunctions.js');
 const config = require('../config.json');
 
@@ -71,9 +71,16 @@ module.exports = {
             )
             .setFooter({ text: `Opened by ${author.username}` })
             .setTimestamp();
-        (auctions[item.name] = {})[item.type] = { embed: logEmbed }
+        let logButtons = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`bid-${item.name}`)
+                    .setStyle(ButtonStyle.Primary)
+                    .setLabel('Bid')
+            );
+        (auctions[item.name] = {})[item.type] = { embed: logEmbed, buttons: logButtons }
         try  {
-            auctions[item.name][item.type].message = await (item.type == 'DKP' ? dkpChannel : pppChannel).send({ embeds: [logEmbed] });
+            auctions[item.name][item.type].message = await (item.type == 'DKP' ? dkpChannel : pppChannel).send({ embeds: [logEmbed], components: [logButtons] });
         } catch (err) {
             console.log('Error sending auction message:', err);
             const errorEmbed = new EmbedBuilder()

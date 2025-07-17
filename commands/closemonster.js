@@ -98,22 +98,24 @@ module.exports = {
                 closer: author.username
             }).eq('item', auction.item.name).eq('open', true));
             if (auction.bids.length > 0) {
-                await googleSheets.spreadsheets.values.append({
-                    spreadsheetId: config.google[auction.item.type].id,
-                    range: config.google[auction.item.type].log,
-                    valueInputOption: 'RAW',
-                    resource: {
-                        values: [
-                            [
-                                winner.user,
-                                auction.item.name,
-                                auction.item.monster,
-                                `${winner.amount} ${auction.item.type.toLowerCase() == 'dkp' ? 'dkp' : 'PPP'}`,
-                                new Date().toLocaleString()
+                if (config.google[auction.item.type].log != '') {
+                    await googleSheets.spreadsheets.values.append({
+                        spreadsheetId: config.google[auction.item.type].id,
+                        range: config.google[auction.item.type].log,
+                        valueInputOption: 'RAW',
+                        resource: {
+                            values: [
+                                [
+                                    winner.user,
+                                    auction.item.name,
+                                    auction.item.monster,
+                                    `${winner.amount} ${auction.item.type.toLowerCase() == 'dkp' ? 'dkp' : 'PPP'}`,
+                                    new Date().toLocaleString()
+                                ]
                             ]
-                        ]
-                    }
-                });
+                        }
+                    });
+                }
             }
 
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
@@ -184,26 +186,32 @@ module.exports = {
                 if (auctions[monster].DKP) {
                     let newEmbed = auctions[monster].DKP.embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
+                    let newButtons = auctions[monster].DKP.buttons;
+                    newButtons.components[0].options = newButtons.components[0].options.filter(a => a.data.value.split('-')[1] == 'true');
                     for (let field of newEmbed.fields) {
                         if (field.name.endsWith('(Closed)')) continue;
-                        let item = itemList.find(a => a.name == field.name);
+                        let item = itemList.find(a => field.name.startsWith(`${a.tradeable ? '💰 ' : ''}**[${a.name}]**`));
                         if (item == null || item.tradeable) continue;
                         field.name = `${field.name} (Closed)`;
                     }
                     auctions[monster].DKP.embed = newEmbed;
-                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed] });
+                    auctions[monster].DKP.buttons = newButtons;
+                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed], components: [newButtons] });
                 }
                 if (auctions[monster].PPP) {
                     let newEmbed = auctions[monster].PPP.embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
+                    let newButtons = auctions[monster].PPP.buttons;
+                    newButtons.components[0].options = newButtons.components[0].options.filter(a => a.data.value.split('-')[1] == 'true');
                     for (let field of newEmbed.fields) {
                         if (field.name.endsWith('(Closed)')) continue;
-                        let item = itemList.find(a => a.name == field.name);
+                        let item = itemList.find(a => field.name.startsWith(`${a.tradeable ? '💰 ' : ''}**[${a.name}]**`));
                         if (item == null || item.tradeable) continue;
                         field.name = `${field.name} (Closed)`;
                     }
                     auctions[monster].PPP.embed = newEmbed;
-                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed] });
+                    auctions[monster].PPP.buttons = newButtons;
+                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed], components: [newButtons] });
                 }
             }
         }

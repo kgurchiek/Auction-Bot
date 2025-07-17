@@ -97,22 +97,24 @@ module.exports = {
                 closer: author.username
             }).eq('item', auction.item.name).eq('open', true));
             if (auction.bids.length > 0) {
-                await googleSheets.spreadsheets.values.append({
-                    spreadsheetId: config.google[auction.item.type].id,
-                    range: config.google[auction.item.type].log,
-                    valueInputOption: 'RAW',
-                    resource: {
-                        values: [
-                            [
-                                winner.user,
-                                auction.item.name,
-                                auction.item.monster,
-                                `${winner.amount} ${auction.item.type.toLowerCase() == 'dkp' ? 'dkp' : 'PPP'}`,
-                                new Date().toLocaleString()
+                if (config.google[auction.item.type].log != '') {
+                    await googleSheets.spreadsheets.values.append({
+                        spreadsheetId: config.google[auction.item.type].id,
+                        range: config.google[auction.item.type].log,
+                        valueInputOption: 'RAW',
+                        resource: {
+                            values: [
+                                [
+                                    winner.user,
+                                    auction.item.name,
+                                    auction.item.monster,
+                                    `${winner.amount} ${auction.item.type.toLowerCase() == 'dkp' ? 'dkp' : 'PPP'}`,
+                                    new Date().toLocaleString()
+                                ]
                             ]
-                        ]
-                    }
-                });
+                        }
+                    });
+                }
             }
 
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
@@ -149,7 +151,7 @@ module.exports = {
                     )
                     .setFooter({ text: `Closed by ${author.username}` })
                     .setTimestamp();
-                await auctions[auction.item.name][auction.item.type].message.edit({ embeds: [logEmbed] });
+                await auctions[auction.item.name][auction.item.type].message.edit({ embeds: [logEmbed], components: [] });
                 delete auctions[auction.item.name];
             }
 
@@ -168,7 +170,7 @@ module.exports = {
                 newEmbed.footer = { text: `Closed by ${author.username}` };
                 for (let field of newEmbed.fields) if (field.name.endsWith('(Closed)')) field.name = field.name.slice(0, -9);
                 auctions[monster].DKP.embed = newEmbed;
-                await auctions[monster].DKP.message.edit({ embeds: [newEmbed] });
+                await auctions[monster].DKP.message.edit({ embeds: [newEmbed], components: [] });
             }
             if (auctions[monster].PPP) {
                 let newEmbed = auctions[monster].PPP.embed;
@@ -177,7 +179,7 @@ module.exports = {
                 newEmbed.footer = { text: `Closed by ${author.username}` };
                 for (let field of newEmbed.fields) if (field.name.endsWith('(Closed)')) field.name = field.name.slice(0, -9);
                 auctions[monster].PPP.embed = newEmbed;
-                await auctions[monster].PPP.message.edit({ embeds: [newEmbed] });
+                await auctions[monster].PPP.message.edit({ embeds: [newEmbed], components: [] });
             }
             delete auctions[monster];
         }

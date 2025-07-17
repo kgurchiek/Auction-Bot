@@ -95,7 +95,7 @@ module.exports = {
             }
 
             let userBids;
-            ({ data: userBids, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item!inner(name, type, monster), winner, price, host').eq('open', true).eq('item.type', auction.item.type).neq('item.name', auction.item.name).like('winner', `%${user.username}%`));
+            ({ data: userBids, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item!inner(name, type, monster, tradeable), winner, price, host').eq('open', true).eq('item.type', auction.item.type).neq('item.name', auction.item.name).like('winner', `%${user.username}%`));
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching User\'s Bids', error.message)] });
             userBids = userBids.filter(a => a.winner.split(', ').includes(user.username));
             let cost = userBids.reduce((a, b) => a + b.price, 0);
@@ -142,9 +142,12 @@ module.exports = {
                         let newEmbed = auctions[auction.item.monster][auction.item.type].embed;
                         if (newEmbed.data) newEmbed = newEmbed.data;
                         let highestBids = auction.bids.filter(a => a.amount == auction.bids[0].amount);
-                        let field = newEmbed.fields.findIndex(a => a.name == item);
+                        let field = newEmbed.fields.findIndex(a => a.name.startsWith(`${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]**`));
                         if (field != -1) {
-                            for (let i = 0; i == 0 || newEmbed.fields[field].value.length > 1024; i++) newEmbed.fields[field].value = auction.bids.length == 0 ? 'No bids' : `Highest Bid${highestBids.length == 1 ? '' : 's'}: ${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : '...'} (${amount} ${auction.item.type})`;
+                            newEmbed.fields[field].name = `${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]** __${highestBids.length == 0 ? '*No Bids*' : `*Current Bid: **(${highestBids[0].amount} ${auction.item.type})***`}__`;
+                            let value = '';
+                            for (let i = 0; i == 0 || value.length > 1024; i++) value = highestBids.length == 0 ? '​' : `**Highest Bid${highestBids.length == 1 ? '' : 's'}:**\n🥇${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : ', ...'} (${highestBids[0].amount} ${auction.item.type})`;
+                            newEmbed.fields[field].value = value;
                             auctions[auction.item.monster][auction.item.type].embed = newEmbed;
                             await auctions[auction.item.monster][auction.item.type].message.edit({ embeds: [newEmbed] });
                         }
@@ -173,11 +176,20 @@ module.exports = {
                 return;
             }
             
-            if (auction.bids.length > 0 && amount < auction.bids[auction.bids.length - 1].amount + raise && !(amount > auction.bids[auction.bids.length - 1].amount && amount == user[auction.item.type.toLowerCase()])) {
+            if (auction.bids.length > 0 && amount < auction.bids[auction.bids.length - 1].amount + raise && !(amount >= auction.bids[auction.bids.length - 1].amount + winRaise && amount == user[auction.item.type.toLowerCase()])) {
                 const errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .setTitle('Bid Too Low')
                     .setDescription(`You must bid at least **${auction.bids[auction.bids.length - 1].amount + raise} ${auction.item.type}** to outbid the current highest bidder.`);
+                await interaction.editReply({ embeds: [errorEmbed] });
+                return;
+            }
+
+            if (auction.bids.length > 0 && amount == auction.bids[auction.bids.length - 1].amount && auction.item.tradeable) {
+                const errorEmbed = new EmbedBuilder()
+                    .setColor('#ff0000')
+                    .setTitle('Bid Too Low')
+                    .setDescription(`You can't tie on a tradeable item.`);
                 await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
@@ -213,9 +225,12 @@ module.exports = {
                 let newEmbed = auctions[auction.item.monster][auction.item.type].embed;
                 if (newEmbed.data) newEmbed = newEmbed.data;
                 let highestBids = auction.bids.filter(a => a.amount == auction.bids[0].amount);
-                let field = newEmbed.fields.findIndex(a => a.name == item);
+                let field = newEmbed.fields.findIndex(a => a.name.startsWith(`${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]**`));
                 if (field != -1) {
-                    for (let i = 0; i == 0 || newEmbed.fields[field].value.length > 1024; i++) newEmbed.fields[field].value = `Highest Bid${highestBids.length == 1 ? '' : 's'}: ${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : '...'} (${amount} ${auction.item.type})`;
+                    newEmbed.fields[field].name = `${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]** __${highestBids.length == 0 ? '*No Bids*' : `*Current Bid: **(${highestBids[0].amount} ${auction.item.type})***`}__`;
+                    let value = '';
+                    for (let i = 0; i == 0 || value.length > 1024; i++) value = highestBids.length == 0 ? '​' : `**Highest Bid${highestBids.length == 1 ? '' : 's'}:**\n🥇${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : ', ...'} (${highestBids[0].amount} ${auction.item.type})`;
+                    newEmbed.fields[field].value = value;
                     auctions[auction.item.monster][auction.item.type].embed = newEmbed;
                     await auctions[auction.item.monster][auction.item.type].message.edit({ embeds: [newEmbed] });
                 }

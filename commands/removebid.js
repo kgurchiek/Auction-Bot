@@ -42,7 +42,7 @@ module.exports = {
             return;
         }
 
-        let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item (name, type, monster), host').eq('item', item).eq('open', true).limit(1);
+        let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item (name, type, monster, tradeable), host').eq('item', item).eq('open', true).limit(1);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
         auction = auction[0];
 
@@ -98,9 +98,10 @@ module.exports = {
             let newEmbed = auctions[auction.item.monster][auction.item.type].embed;
             if (newEmbed.data) newEmbed = newEmbed.data;
             let highestBids = auction.bids.filter(a => a.amount == auction.bids[0].amount);
-            let field = newEmbed.fields.findIndex(a => a.name == item);
+            let field = newEmbed.fields.findIndex(a => a.name.startsWith(`${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]**`));
             if (field != -1) {
-                for (let i = 0; i == 0 || newEmbed.fields[field].value.length > 1024; i++) newEmbed.fields[field].value = highestBids.length == 0 ? 'No Bids' : `Highest Bid${highestBids.length == 1 ? '' : 's'}: ${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : '...'} (${highestBids[0].amount} ${auction.item.type})`;
+                newEmbed.fields[field].name = `${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]** __${highestBids.length == 0 ? '*No Bids*' : `*Current Bid: **(${highestBids[0].amount} ${item.type})***`}__`;
+                for (let i = 0; i == 0 || newEmbed.fields[field].value.length > 1024; i++) newEmbed.fields[field].value = highestBids.length == 0 ? '​' : `**Highest Bid${highestBids.length == 1 ? '' : 's'}:**\n🥇${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : ', ...'} (${highestBids[0].amount} ${item.type})`;
                 auctions[auction.item.monster][auction.item.type].embed = newEmbed;
                 await auctions[auction.item.monster][auction.item.type].message.edit({ embeds: [newEmbed] });
             }

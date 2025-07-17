@@ -23,22 +23,28 @@ const { google } = require('googleapis');
         PPP: null
     }
     async function updateAuctionSheet() {
-        try {
-            auctionSheet.DKP = (await googleSheets.spreadsheets.values.get({
-                spreadsheetId: config.google.DKP.id,
-                range: config.google.DKP.log
-            })).data.values;
-        } catch (err) {
-            console.log('Error fetching auctions:', err);
+        if (config.google.DKP.log == '') auctionSheet.DKP = [];
+        else {
+            try {
+                auctionSheet.DKP = (await googleSheets.spreadsheets.values.get({
+                    spreadsheetId: config.google.DKP.id,
+                    range: config.google.DKP.log
+                })).data.values;
+            } catch (err) {
+                console.log('Error fetching auctions:', err);
+            }
         }
 
-        try {
-            auctionSheet.PPP = (await googleSheets.spreadsheets.values.get({
-                spreadsheetId: config.google.PPP.id,
-                range: config.google.PPP.log
-            })).data.values;
-        } catch (err) {
-            console.log('Error fetching auctions:', err);
+        if (config.google.PPP.log == '') auctionSheet.PPP = [];
+        else {
+            try {
+                auctionSheet.PPP = (await googleSheets.spreadsheets.values.get({
+                    spreadsheetId: config.google.PPP.id,
+                    range: config.google.PPP.log
+                })).data.values;
+            } catch (err) {
+                console.log('Error fetching auctions:', err);
+            }
         }
     }
 
@@ -251,11 +257,16 @@ const { google } = require('googleapis');
         updateSheets();
     });
 
+    async function getUser(id) {
+        let { data: user, error } = await supabase.from(config.supabase.tables.users).select('id::text, username, dkp, ppp, frozen').eq('id', id).limit(1);
+        return error ? { error } : user[0];
+    }
+
     client.on(Events.InteractionCreate, async interaction => {
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);
             if (!command) return;
-            await interaction.deferReply({ ephemeral: command.ephemeral })
+            await interaction.deferReply({ ephemeral: command.ephemeral });
             
             let members = await guild.members.fetch();
             let guildMember = members.get(interaction.user.id);
@@ -267,16 +278,16 @@ const { google } = require('googleapis');
                 return;
             }
             
-            let { data: user, error } = await supabase.from(config.supabase.tables.users).select('id::text, username, dkp, ppp, frozen').eq('id', interaction.user.id).limit(1);
-            if (error) {
+            let user = await getUser(interaction.user.id);
+            if (user.error) {
                 console.log(error);
                 let errorEmbed = new EmbedBuilder()
-                .setColor('#ff0000')
-                .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
+                    .setColor('#ff0000')
+                    .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
                 await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
-            user = user[0];
+
             if (user == null && command.data.name != 'register') {
                 let errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
@@ -319,6 +330,29 @@ const { google } = require('googleapis');
             const command = client.commands.get(interaction.customId.split('-')[0]);
             if (command?.buttonHandler) command.buttonHandler(interaction);
         }
+        if (interaction.isAnySelectMenu()) {
+            let user = await getUser(interaction.user.id);
+
+            const command = client.commands.get(interaction.customId.split('-')[0]);
+            if (command?.buttonHandler) command.selectHandler(interaction, user);
+        }
+        if (interaction.isModalSubmit()) {
+            const command = client.commands.get(interaction.customId.split('-')[0]);
+            if (command == null) return;
+            await interaction.deferReply({ ephemeral: command.ephemeral });
+
+            let user = await getUser(interaction.user.id);
+            if (user.error) {
+                console.log(error);
+                let errorEmbed = new EmbedBuilder()
+                    .setColor('#ff0000')
+                    .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
+                await interaction.editReply({ embeds: [errorEmbed] });
+                return;
+            }
+
+            if (command?.buttonHandler) command.modalHandler(interaction, user, supabase, auctions);
+        }
     });
 
     client.on(Events.MessageDelete, async message => {
@@ -330,8 +364,8 @@ const { google } = require('googleapis');
             if (auction.PPP && auction.PPP?.message.guildId == message.guildId && auction.PPP?.message.channelId == message.channelId && auction.PPP?.message.id == message.id) foundPPP = true;
             if (!(foundDKP || foundPPP)) continue;
             if (auctionList.find(a => a.item.name == item) || auctionList.find(a => a.item.monster == item)) {
-                if (foundDKP) auction.DKP.message = await dkpChannel.send({ embeds: [auction.DKP.embed] });
-                if (foundPPP) auction.PPP.message = await pppChannel.send({ embeds: [auction.PPP.embed] });
+                if (foundDKP) auction.DKP.message = await dkpChannel.send({ embeds: [auction.DKP.embed], components: [auction.DKP.buttons] });
+                if (foundPPP) auction.PPP.message = await pppChannel.send({ embeds: [auction.PPP.embed], components: [auction.PPP.buttons] });
             } else delete auctions[item];
         }
         try {

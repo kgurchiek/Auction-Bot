@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const fs = require('fs');
 const config = require('../config.json');
 const { errorEmbed } = require('../commonFunctions.js');
@@ -13,42 +13,54 @@ handleQueue();
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('bid')
-    .setDescription('places a bid')
-    .addStringOption(option =>
-        option.setName('item')
-            .setDescription('the item to bid on')
-            .setRequired(true)
-            .setAutocomplete(true)
-    )
-    .addNumberOption(option =>
-        option.setName('amount')
-            .setDescription('the amount to bid')
-            .setRequired(true)
-            .setMinValue(0)
-    ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
-        const focusedValue = interaction.options.getFocused(true);
-        let user = userList.find(a => a.id == interaction.user.id) || (await supabase.from(config.supabase.tables.users).select('*').eq('id', interaction.user.id).limit(1)).data?.[0];
-        await interaction.respond([{ name: user == null ? 'Error: failed to load user data' : `Your balance: ${user.dkp} DKP, ${user.ppp} PPP`, value: '​' }].concat(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: `${a.item.name} (${a.item.wipe ? user[a.item.type.toLowerCase()] : (a.bids[a.bids.length - 1]?.amount + config.auction[a.item.type].raise) || config.auction[a.item.type].min} ${a.item.type})`, value: a.item.name })).slice(0, 24)));
+    .setName('bid'),
+    async buttonHandler(interaction) {
+        const modal = new ModalBuilder()
+            .setCustomId(`bid-${interaction.customId.split('-')[1]}`)
+            .setTitle('Bid')
+            .addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                    .setCustomId('amount')
+                    .setLabel('Amount')
+                    .setStyle(TextInputStyle.Short)
+                )
+            );
+        interaction.showModal(modal);
+    },
+    async selectHandler(interaction, author) {
+        const modal = new ModalBuilder()
+            .setCustomId(`bid-${interaction.values[0]}`)
+            .setTitle(`Bid`)
+            .addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                    .setCustomId('amount')
+                    .setLabel(`Your balance: ${author.dkp} DKP, ${author.ppp} PPP`)
+                    .setStyle(TextInputStyle.Short)
+                )
+            );
+        await interaction.showModal(modal);
+        await interaction.editReply({ content: '' })
     },
     ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
+    async modalHandler(interaction, author, supabase, auctions) {
         bidQueue.push(async () => {
-            let item = interaction.options.getString('item');
+            let item = interaction.customId.split('-')[1];
             if (item.endsWith('DKP)') || item.endsWith('PPP)')) item = item.slice(0, item.lastIndexOf('(') - 1);
-            let amount = interaction.options.getNumber('amount');
-
-            if (item == '​') {
-                const errorEmbed = new EmbedBuilder()
+            
+            let amount = interaction.fields.getTextInputValue('amount');
+            if (isNaN(parseFloat(amount))) {
+                let errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .setTitle('Error')
-                    .setDescription('Please select an item to bid on.');
+                    .setDescription(`"${amount}" is not a number.`)
                 await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
+            amount = parseFloat(amount);
 
-            let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('id, item!inner(name, type, monster, wipe), bids, host').eq('item.name', item).eq('open', true).limit(1);
+            let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('id, item!inner(name, type, monster, wipe, tradeable), bids, host').eq('item.name', item).eq('open', true).limit(1);
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
             auction = auction[0];
             if (auction == null) {
@@ -79,7 +91,7 @@ module.exports = {
             }
 
             let userBids;
-            ({ data: userBids, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item!inner(name, type, monster), winner, price, host').eq('open', true).eq('item.type', auction.item.type).neq('item.name', auction.item.name).like('winner', `%${author.username}%`));
+            ({ data: userBids, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item!inner(name, type, monster, tradeable), winner, price, host').eq('open', true).eq('item.type', auction.item.type).neq('item.name', auction.item.name).like('winner', `%${author.username}%`));
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching User\'s Bids', error.message)] });
             userBids = userBids.filter(a => a.winner.split(', ').includes(author.username));
             let cost = userBids.reduce((a, b) => a + b.price, 0);
@@ -122,9 +134,12 @@ module.exports = {
                         let newEmbed = auctions[auction.item.monster][auction.item.type].embed;
                         if (newEmbed.data) newEmbed = newEmbed.data;
                         let highestBids = auction.bids.filter(a => a.amount == auction.bids[0].amount);
-                        let field = newEmbed.fields.findIndex(a => a.name == auction.item.name);
+                        let field = newEmbed.fields.findIndex(a => a.name.startsWith(`${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]**`));
                         if (field != -1) {
-                            for (let i = 0; i == 0 || newEmbed.fields[field].value.length > 1024; i++) newEmbed.fields[field].value = auction.bids.length == 0 ? 'No bids' : `Highest Bid${highestBids.length == 1 ? '' : 's'}: ${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : '...'} (${amount} ${auction.item.type})`;
+                            newEmbed.fields[field].name = `${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]** __${highestBids.length == 0 ? '*No Bids*' : `*Current Bid: **(${highestBids[0].amount} ${auction.item.type})***`}__`;
+                            let value = '';
+                            for (let i = 0; i == 0 || value.length > 1024; i++) value = highestBids.length == 0 ? '​' : `**Highest Bid${highestBids.length == 1 ? '' : 's'}:**\n🥇${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : ', ...'} (${highestBids[0].amount} ${auction.item.type})`;
+                            newEmbed.fields[field].value = value;
                             auctions[auction.item.monster][auction.item.type].embed = newEmbed;
                             await auctions[auction.item.monster][auction.item.type].message.edit({ embeds: [newEmbed] });
                         }
@@ -142,7 +157,7 @@ module.exports = {
                 return;
             }
 
-            let { increment, raise } = config.auction[auction.item.type];
+            let { increment, raise, winRaise } = config.auction[auction.item.type];
             if (auction.item.wipe) raise = increment;
             if (Math.abs(Math.round((amount % increment) * 10) - ((amount % increment) * 10)) > 0.00001) {
                 const errorEmbed = new EmbedBuilder()
@@ -152,12 +167,21 @@ module.exports = {
                 await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
-
-            if (auction.bids.length > 0 && amount < auction.bids[auction.bids.length - 1].amount + raise && !(amount > auction.bids[auction.bids.length - 1].amount && amount == author[auction.item.type.toLowerCase()])) {
+            
+            if (auction.bids.length > 0 && amount < auction.bids[auction.bids.length - 1].amount + raise && !(amount >= auction.bids[auction.bids.length - 1].amount + winRaise && amount == author[auction.item.type.toLowerCase()])) {
                 const errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .setTitle('Bid Too Low')
                     .setDescription(`You must bid at least **${auction.bids[auction.bids.length - 1].amount + raise} ${auction.item.type}** to outbid the current highest bidder.`);
+                await interaction.editReply({ embeds: [errorEmbed] });
+                return;
+            }
+
+            if (auction.bids.length > 0 && amount == auction.bids[auction.bids.length - 1].amount && auction.item.tradeable) {
+                const errorEmbed = new EmbedBuilder()
+                    .setColor('#ff0000')
+                    .setTitle('Bid Too Low')
+                    .setDescription(`You can't tie on a tradeable item.`);
                 await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
@@ -193,9 +217,12 @@ module.exports = {
                 let newEmbed = auctions[auction.item.monster][auction.item.type].embed;
                 if (newEmbed.data) newEmbed = newEmbed.data;
                 let highestBids = auction.bids.filter(a => a.amount == auction.bids[0].amount);
-                let field = newEmbed.fields.findIndex(a => a.name == item);
+                let field = newEmbed.fields.findIndex(a => a.name.startsWith(`${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]**`));
                 if (field != -1) {
-                    for (let i = 0; i == 0 || newEmbed.fields[field].value.length > 1024; i++) newEmbed.fields[field].value = `Highest Bid${highestBids.length == 1 ? '' : 's'}: ${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : '...'} (${amount} ${auction.item.type})`;
+                    newEmbed.fields[field].name = `${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]** __${highestBids.length == 0 ? '*No Bids*' : `*Current Bid: **(${highestBids[0].amount} ${auction.item.type})***`}__`;
+                    let value = '';
+                    for (let i = 0; i == 0 || value.length > 1024; i++) value = highestBids.length == 0 ? '​' : `**Highest Bid${highestBids.length == 1 ? '' : 's'}:**\n🥇${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : ', ...'} (${highestBids[0].amount} ${auction.item.type})`;
+                    newEmbed.fields[field].value = value;
                     auctions[auction.item.monster][auction.item.type].embed = newEmbed;
                     await auctions[auction.item.monster][auction.item.type].message.edit({ embeds: [newEmbed] });
                 }
