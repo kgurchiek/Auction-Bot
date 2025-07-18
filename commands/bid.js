@@ -167,9 +167,6 @@ module.exports = {
                 await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
-            let difference = amount % increment;
-            if (difference < increment / 2) amount -= difference;
-            else amount += increment - difference;
             
             if (auction.bids.length > 0 && amount < auction.bids[auction.bids.length - 1].amount + raise && !(amount >= auction.bids[auction.bids.length - 1].amount + winRaise && amount == author[auction.item.type.toLowerCase()])) {
                 const errorEmbed = new EmbedBuilder()
