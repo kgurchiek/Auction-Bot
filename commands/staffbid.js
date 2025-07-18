@@ -64,7 +64,7 @@ module.exports = {
             }
 
             let auction;
-            ({ data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('id, item!inner(name, type, monster, wipe), bids, host').eq('item.name', item).eq('open', true).limit(1));
+            ({ data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('id, item!inner(name, type, monster, wipe, tradeable), bids, host').eq('item.name', item).eq('open', true).limit(1));
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
             auction = auction[0];
             if (auction == null) {
@@ -156,7 +156,8 @@ module.exports = {
                 amount = user[auction.item.type.toLowerCase()];
             }
 
-            if ((user[auction.item.type.toLowerCase()] - (auction.item.wipe ? 0 : cost)) < amount) {
+            let { increment, raise, winRaise } = config.auction[auction.item.type];
+            if (Math.round((user[auction.item.type.toLowerCase()] - (auction.item.wipe ? 0 : cost)) / increment) * increment < amount) {
                 const errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .setTitle('Insufficient Funds')
@@ -165,7 +166,6 @@ module.exports = {
                 return;
             }
 
-            let { increment, raise } = config.auction[auction.item.type];
             if (auction.item.wipe) raise = increment;
             if (Math.abs(Math.round((amount % increment) * 10) - ((amount % increment) * 10)) > 0.00001) {
                 const errorEmbed = new EmbedBuilder()
@@ -175,6 +175,7 @@ module.exports = {
                 await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
+            amount = Math.round(amount / increment) * increment;
             
             if (auction.bids.length > 0 && amount < auction.bids[auction.bids.length - 1].amount + raise && !(amount >= auction.bids[auction.bids.length - 1].amount + winRaise && amount == user[auction.item.type.toLowerCase()])) {
                 const errorEmbed = new EmbedBuilder()
@@ -194,7 +195,7 @@ module.exports = {
                 return;
             }
 
-            auction.bids.push({ user: user.username, amount });
+            auction.bids.push({ user: user.username, amount, wipe: amount == user[auction.item.type.toLowerCase()] });
             ({ error } = await supabase.from(config.supabase.tables.auctions).update({
                 bids: auction.bids,
                 winner: auction.bids.filter(a => a.amount == amount).map(a => a.user).join(', '),

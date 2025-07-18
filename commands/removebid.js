@@ -100,8 +100,8 @@ module.exports = {
             let highestBids = auction.bids.filter(a => a.amount == auction.bids[0].amount);
             let field = newEmbed.fields.findIndex(a => a.name.startsWith(`${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]**`));
             if (field != -1) {
-                newEmbed.fields[field].name = `${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]** __${highestBids.length == 0 ? '*No Bids*' : `*Current Bid: **(${highestBids[0].amount} ${item.type})***`}__`;
-                for (let i = 0; i == 0 || newEmbed.fields[field].value.length > 1024; i++) newEmbed.fields[field].value = highestBids.length == 0 ? '​' : `**Highest Bid${highestBids.length == 1 ? '' : 's'}:**\n🥇${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : ', ...'} (${highestBids[0].amount} ${item.type})`;
+                newEmbed.fields[field].name = `${auction.item.tradeable ? '💰 ' : ''}**[${auction.item.name}]** __${highestBids.length == 0 ? '*No Bids*' : `*Current Bid: **(${highestBids[0].amount} ${auction.item.type})***`}__`;
+                for (let i = 0; i == 0 || newEmbed.fields[field].value.length > 1024; i++) newEmbed.fields[field].value = highestBids.length == 0 ? '​' : `**Highest Bid${highestBids.length == 1 ? '' : 's'}:**\n🥇${highestBids.map(a => a.user).slice(0, highestBids.length - i).join(', ')}${i == 0 ? '' : ', ...'} (${highestBids[0].amount} ${auction.item.type})`;
                 auctions[auction.item.monster][auction.item.type].embed = newEmbed;
                 await auctions[auction.item.monster][auction.item.type].message.edit({ embeds: [newEmbed] });
             }

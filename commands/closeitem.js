@@ -68,15 +68,20 @@ module.exports = {
                 .setColor('#00ff00')
                 .setTitle(`Rolls for ${auction.item.name}`);
             let message = await rollChannel.send({ embeds: [rollEmbed] });
+            do {
+                winners.forEach(a => delete a.roll);
+                for (let item of winners) {
+                    await message.edit({ embeds: [rollEmbed] });
+                    do {
+                        item.roll = Math.floor(Math.random() * 1000);
+                    } while (winners.filter(a => a.roll == item.roll).length > 1);
+                }
+                winner = winners.reduce((a, b) => (a == null || b.roll > a.roll) ? b : a, null);
+            } while (!(winners.find(a => a.wipe) == null || winner.wipe));
             for (let item of winners) {
-                await message.edit({ embeds: [rollEmbed] });
-                do {
-                    item.roll = Math.floor(Math.random() * 1000)
-                } while (winners.filter(a => a.roll == item.roll).length > 1);
                 rollEmbed.data.description = `${rollEmbed.data.description || ''}\n${item.user}: ${item.roll}`.trim();
                 await message.edit({ embeds: [rollEmbed] });
             }
-            winner = winners.sort((a, b) => b.roll - a.roll)[0];
             rollEmbed.data.description += `\n\n**Winner:** ${winner.user}`;
             await message.edit({ embeds: [rollEmbed] });
         } else winner = winners.sort((a, b) => b.amount - a.amount)[0];
@@ -114,19 +119,12 @@ module.exports = {
             newEmbed = new EmbedBuilder()
                 .setColor('#00ff00')
                 .setTitle(`Auction Closed for ${auction.item.name}`)
-                .setDescription(`Bidding has been closed for **${item}**.\nNo bids were placed.`)
-        } else if (auction.item.type == 'DKP') {
-            let winners = auction.bids.sort((a, b) => b.amount - a.amount).filter(a => a.amount === auction.bids[0].amount);
-            newEmbed = new EmbedBuilder()
-                .setColor('#00ff00')
-                .setTitle(`Auction Closed for ${auction.item.name}`)
-                .setDescription(`Bidding has been closed for **${item}**.\nWinners (${winners[0].amount} ${auction.item.type}): ${winners.map(a => a.user).join(', ')}`)
+                .setDescription(`No bids were placed.`)
         } else {
-            winner = auction.bids.sort((a, b) => b.amount - a.amount)[0];
             newEmbed = new EmbedBuilder()
                 .setColor('#00ff00')
                 .setTitle(`Auction Closed for ${auction.item.name}`)
-                .setDescription(`Bidding has been closed for **${item}**.\nWinner: ${winner.user} (${winner.amount} ${auction.item.type})`)
+                .setDescription(`Winner: ${winner.user} (${winner.amount} ${auction.item.type})`)
         }
         await interaction.editReply({ embeds: [newEmbed] });
 
@@ -137,7 +135,8 @@ module.exports = {
                 .setTitle(`Auction for ${auction.item.name} (Closed)`)
                 .addFields(
                     { name: 'Next Bid', value: auction.bids.length == 0 ? `${config.auction[auction.item.type].min} ${auction.item.type}` : `${auction.bids[0].amount + config.auction[auction.item.type].raise} ${auction.item.type}` },
-                    { name: 'Bids', value: `\`\`\`${auction.bids.length == 0 ? '​' : auction.bids.slice(0, 15).map(a => `${a.user}: ${a.amount} ${auction.item.type}`).join('\n')}${auction.bids.length > 10 ? '\n...' : ''}\`\`\`` }
+                    { name: 'Bids', value: `\`\`\`${auction.bids.length == 0 ? '​' : auction.bids.slice(0, 15).map(a => `${a.user}: ${a.amount} ${auction.item.type}`).join('\n')}${auction.bids.length > 10 ? '\n...' : ''}\`\`\`` },
+                    { name: 'Winner', value: `${winner.user} (${winner.amount} ${auction.item.type})` }
                 )
                 .setFooter({ text: `Closed by ${author.username}` })
                 .setTimestamp();

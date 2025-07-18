@@ -78,15 +78,20 @@ module.exports = {
                     .setColor('#00ff00')
                     .setTitle(`Rolls for ${auction.item.name}`);
                 let message = await rollChannel.send({ embeds: [rollEmbed] });
+                do {
+                    winners.forEach(a => delete a.roll);
+                    for (let item of winners) {
+                        await message.edit({ embeds: [rollEmbed] });
+                        do {
+                            item.roll = Math.floor(Math.random() * 1000);
+                        } while (winners.filter(a => a.roll == item.roll).length > 1);
+                    }
+                    winner = winners.reduce((a, b) => (a == null || b.roll > a.roll) ? b : a, null);
+                } while (!(winners.find(a => a.wipe) == null || winner.wipe));
                 for (let item of winners) {
-                    await message.edit({ embeds: [rollEmbed] });
-                    do {
-                        item.roll = Math.floor(Math.random() * 1000)
-                    } while (winners.filter(a => a.roll == item.roll).length > 1);
                     rollEmbed.data.description = `${rollEmbed.data.description || ''}\n${item.user}: ${item.roll}`.trim();
                     await message.edit({ embeds: [rollEmbed] });
                 }
-                winner = winners.sort((a, b) => b.roll - a.roll)[0];
                 rollEmbed.data.description += `\n\n**Winner:** ${winner.user}`;
                 await message.edit({ embeds: [rollEmbed] });
             } else winner = winners.sort((a, b) => b.amount - a.amount)[0];
@@ -187,7 +192,7 @@ module.exports = {
                     let newEmbed = auctions[monster].DKP.embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     let newButtons = auctions[monster].DKP.buttons;
-                    newButtons.components[0].options = newButtons.components[0].options.filter(a => a.data.value.split('-')[1] == 'true');
+                    newButtons.components[0].options = newButtons.components[0].options.filter(a => (a.data || a).value.split('-')[1] == 'true');
                     for (let field of newEmbed.fields) {
                         if (field.name.endsWith('(Closed)')) continue;
                         let item = itemList.find(a => field.name.startsWith(`${a.tradeable ? '💰 ' : ''}**[${a.name}]**`));
@@ -202,7 +207,7 @@ module.exports = {
                     let newEmbed = auctions[monster].PPP.embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     let newButtons = auctions[monster].PPP.buttons;
-                    newButtons.components[0].options = newButtons.components[0].options.filter(a => a.data.value.split('-')[1] == 'true');
+                    newButtons.components[0].options = newButtons.components[0].options.filter(a => (a.data || a).value.split('-')[1] == 'true');
                     for (let field of newEmbed.fields) {
                         if (field.name.endsWith('(Closed)')) continue;
                         let item = itemList.find(a => field.name.startsWith(`${a.tradeable ? '💰 ' : ''}**[${a.name}]**`));
