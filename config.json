@@ -25,12 +25,14 @@
         "DKP": {
             "min": 0,
             "increment": 0.1,
-            "raise": 0  
+            "raise": 0.1,
+            "winRaise": 0
         },
         "PPP": {
             "min": 0,
             "increment": 0.1,
-            "raise": 1
+            "raise": 1,
+            "winRaise": 0.1
         }
     },
     "google": {
