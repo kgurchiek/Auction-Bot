@@ -194,6 +194,7 @@ const { google } = require('googleapis');
     updateUsers();
 
     async function updateUnregistered() {
+        if (unregisteredChannel == null) return;
         let members = Array.from((await guild.members.fetch()).values()).filter(a => !a.user.bot);
         members = members.map(a => new Promise(async res => res({ member: a, account: await supabase.from(config.supabase.tables.users).select('id::text').eq('id', a.id)})));
         members = (await Promise.all(members)).filter(a => a.account.data.length == 0).map(a => a.member);
@@ -244,7 +245,7 @@ const { google } = require('googleapis');
         rollChannel = await client.channels.fetch(config.discord.rollChannel);
         dkpLeaderboard = await client.channels.fetch(config.discord.leaderboard.DKP);
         pppLeaderboard = await client.channels.fetch(config.discord.leaderboard.PPP);
-        unregisteredChannel = await client.channels.fetch(config.discord.unregistered);
+        if (config.discord.unregistered != '') unregisteredChannel = await client.channels.fetch(config.discord.unregistered);
 
         for (const item in auctions) {
             if (auctions[item].DKP) {
