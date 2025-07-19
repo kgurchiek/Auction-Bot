@@ -66,7 +66,7 @@ module.exports = {
         if (winners.length > 1) {
             let rollEmbed = new EmbedBuilder()
                 .setColor('#00ff00')
-                .setTitle(`Rolls for ${auction.item.name}${winners.filter(a => a.wipe).length == 1 ? `(Forcing winner to ${winners.find(a => a.wipe).user})` : ''}`);
+                .setTitle(`Rolls for ${auction.item.name}${winners.filter(a => a.wipe).length == 1 ? ` (Forcing winner to ${winners.find(a => a.wipe).user})` : ''}`);
             let message = await rollChannel.send({ embeds: [rollEmbed] });
             do {
                 winners.forEach(a => delete a.roll);
