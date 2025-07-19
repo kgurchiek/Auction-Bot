@@ -37,16 +37,14 @@ module.exports = {
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     newEmbed.title = `Auction for ${monster} (Closed)`;
                     newEmbed.footer = { text: `Closed by ${author.username}` };
-                    auctions[monster].DKP.embed = newEmbed;
-                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed] });
+                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed], components: [] });
                 }
                 if (auctions[monster].PPP) {
                     let newEmbed = auctions[monster].PPP.embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     newEmbed.title = `Auction for ${monster} (Closed)`;
                     newEmbed.footer = { text: `Closed by ${author.username}` };
-                    auctions[monster].PPP.embed = newEmbed;
-                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed] });
+                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed], components: [] });
                 }
                 delete auctions[monster];
             }
@@ -157,7 +155,7 @@ module.exports = {
                     )
                     .setFooter({ text: `Closed by ${author.username}` })
                     .setTimestamp();
-                await auctions[auction.item.name][auction.item.type].message.edit({ embeds: [logEmbed] });
+                await auctions[auction.item.name][auction.item.type].message.edit({ embeds: [logEmbed], components: [] });
                 delete auctions[auction.item.name];
             }
 
@@ -175,16 +173,14 @@ module.exports = {
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     newEmbed.title = `Auction for ${monster} (Closed)`;
                     newEmbed.footer = { text: `Closed by ${author.username}` };
-                    auctions[monster].DKP.embed = newEmbed;
-                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed] });
+                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed], components: [] });
                 }
                 if (auctions[monster].PPP) {
                     let newEmbed = auctions[monster].PPP.embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     newEmbed.title = `Auction for ${monster} (Closed)`;
                     newEmbed.footer = { text: `Closed by ${author.username}` };
-                    auctions[monster].PPP.embed = newEmbed;
-                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed] });
+                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed], components: [] });
                 }
                 delete auctions[monster];
             } else {

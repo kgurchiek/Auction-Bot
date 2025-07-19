@@ -43,7 +43,7 @@ module.exports = {
                     )
                     .setFooter({ text: `Closed by ${author.username}` })
                     .setTimestamp();
-                await auctions[item][auction.item.type].message.edit({ embeds: [logEmbed] });
+                await auctions[item][auction.item.type].message.edit({ embeds: [logEmbed], components: [] });
                 delete auctions[item];
             }
 
