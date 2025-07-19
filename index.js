@@ -279,20 +279,19 @@ const { google } = require('googleapis');
             }
             
             let user = await getUser(interaction.user.id);
+            if (user == null && command.data.name != 'register') {
+                let errorEmbed = new EmbedBuilder()
+                .setColor('#ff0000')
+                .addFields({ name: 'Error', value: 'User not found. Use /register to begin.' });
+                await interaction.editReply({ embeds: [errorEmbed] })
+                return;
+            }
             if (user.error) {
                 console.log(error);
                 let errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
                 await interaction.editReply({ embeds: [errorEmbed] });
-                return;
-            }
-
-            if (user == null && command.data.name != 'register') {
-                let errorEmbed = new EmbedBuilder()
-                .setColor('#ff0000')
-                .addFields({ name: 'Error', value: 'User not found. Use /register to begin.' });
-                await interaction.editReply({ embeds: [errorEmbed] })
                 return;
             }
             if (user != null) {
