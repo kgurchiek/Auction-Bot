@@ -74,7 +74,7 @@ const { google } = require('googleapis');
         embeds.forEach((a, i) => {
             a.data.description += '```';
             if (messages[i]) messages[i].edit({ embeds: [a] });
-            else dkpLeaderboard.send({ embeds: [a] })
+            else dkpLeaderboard.send({ embeds: [a] });
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
 
@@ -193,6 +193,29 @@ const { google } = require('googleapis');
     }
     updateUsers();
 
+    async function updateUnregistered() {
+        let members = Array.from((await guild.members.fetch()).values()).filter(a => !a.user.bot);
+        members = members.map(a => new Promise(async res => res({ member: a, account: await supabase.from(config.supabase.tables.users).select('id::text').eq('id', a.id)})));
+        members = (await Promise.all(members)).filter(a => a.account.data.length == 0).map(a => a.member);
+
+        let messages = Array.from((await unregisteredChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
+        let embeds = [];
+        embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Unregistered Users').setDescription(`\`\`\`\n`))
+        for (let member of members) {
+            let string = `${member.user.username}\n`;
+            if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
+            embeds[embeds.length - 1].data.description += string;
+        }
+        embeds.forEach((a, i) => {
+            a.data.description += '```';
+            if (messages[i]) messages[i].edit({ embeds: [a] });
+            else unregisteredChannel.send({ embeds: [a] });
+        });
+        for (let message of messages.slice(embeds.length)) await message.delete();
+
+        setTimeout(updateUnregistered, 1000 * 60 * 5);
+    }
+
     process.on('uncaughtException', console.error);
 
     const client = new Client({ partials: [Partials.Channel, Partials.GuildMember, Partials.Message], intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages] });
@@ -211,6 +234,7 @@ const { google } = require('googleapis');
     let rollChannel;
     let dkpLeaderboard;
     let pppLeaderboard;
+    let unregisteredChannel;
     client.once(Events.ClientReady, async () => {
         console.log(`[Bot]: ${client.user.tag}`);
         console.log(`[Servers]: ${client.guilds.cache.size}`);
@@ -220,6 +244,7 @@ const { google } = require('googleapis');
         rollChannel = await client.channels.fetch(config.discord.rollChannel);
         dkpLeaderboard = await client.channels.fetch(config.discord.leaderboard.DKP);
         pppLeaderboard = await client.channels.fetch(config.discord.leaderboard.PPP);
+        unregisteredChannel = await client.channels.fetch(config.discord.unregistered);
 
         for (const item in auctions) {
             if (auctions[item].DKP) {
@@ -255,6 +280,7 @@ const { google } = require('googleapis');
         }
 
         updateSheets();
+        updateUnregistered();
     });
 
     async function getUser(id) {
