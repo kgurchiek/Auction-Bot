@@ -198,15 +198,16 @@ const { google } = require('googleapis');
         let members = Array.from((await guild.members.fetch()).values()).filter(a => !a.user.bot);
         members = members.map(a => new Promise(async res => res({ member: a, account: await supabase.from(config.supabase.tables.users).select('id::text').eq('id', a.id)})));
         members = (await Promise.all(members)).filter(a => a.account.data.length == 0).map(a => a.member);
+        members.sort((a, b) => a.user.username > b.user.username ? 1 : -1);
 
         let messages = Array.from((await unregisteredChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
         let embeds = [];
-        embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Unregistered Users').setDescription(`\`\`\`\n`))
-        for (let member of members) {
-            let string = `${member.user.username}\n`;
+        embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Unregistered Users').setDescription('```\n'));
+        members.forEach((member, i) => {
+            let string = `${i + 1}${' '.repeat(String(members.length).length - String(i + 1).length)} | ${member.user.username}\n`;
             if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
             embeds[embeds.length - 1].data.description += string;
-        }
+        })
         embeds.forEach((a, i) => {
             a.data.description += '```';
             if (messages[i]) messages[i].edit({ embeds: [a] });
@@ -306,20 +307,22 @@ const { google } = require('googleapis');
             }
             
             let user = await getUser(interaction.user.id);
-            if (user == null && command.data.name != 'register') {
-                let errorEmbed = new EmbedBuilder()
-                .setColor('#ff0000')
-                .addFields({ name: 'Error', value: 'User not found. Use /register to begin.' });
-                await interaction.editReply({ embeds: [errorEmbed] })
-                return;
-            }
-            if (user.error) {
-                console.log(error);
-                let errorEmbed = new EmbedBuilder()
-                    .setColor('#ff0000')
-                    .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
-                await interaction.editReply({ embeds: [errorEmbed] });
-                return;
+            if (command.data.name != 'register') {
+                if (user == null) {
+                    let errorEmbed = new EmbedBuilder()
+                        .setColor('#ff0000')
+                        .addFields({ name: 'Error', value: 'User not found. Use /register to begin.' });
+                    await interaction.editReply({ embeds: [errorEmbed] })
+                    return;
+                }
+                if (user.error) {
+                    console.log(error);
+                    let errorEmbed = new EmbedBuilder()
+                        .setColor('#ff0000')
+                        .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
+                    await interaction.editReply({ embeds: [errorEmbed] });
+                    return;
+                }
             }
             if (user != null) {
                 user.staff = false;
