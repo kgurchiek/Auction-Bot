@@ -42,7 +42,7 @@ module.exports = {
             return;
         }
 
-        let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item (name, type, monster, tradeable), host').eq('item', item).eq('open', true).limit(1);
+        let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item (name, type, monster, tradeable), host, start').eq('item', item).eq('open', true).limit(1);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
         auction = auction[0];
 
@@ -85,8 +85,11 @@ module.exports = {
             const logEmbed = new EmbedBuilder()
                 .setColor('#00ff00')
                 .setTitle(`Auction for ${auction.item.name} (Open)`)
+                .setDescription(`### Opened <t:${Math.floor(new Date(auction.start).getTime() / 1000)}:R>`)
+                .setAuthor({ name: 'Heirloom\'s Auction Bot', iconURL: 'https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png' })
+                .setThumbnail(`https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//${auction.item.monster.split('(')[0].replaceAll(' ', '')}.png`)
                 .addFields(
-                    { name: 'Next Bid', value: `${auction.bids.length == 0 ? 0 : auction.bids[0].amount + config.auction[auction.item.type].raise} ${auction.item.type}` },
+                    { name: 'Next Bid', value: `${auction.bids.length == 0 ? 0 : Math.round((auction.bids[0].amount + config.auction[auction.item.type].raise) * 10) / 10} ${auction.item.type}` },
                     { name: 'Bids', value: `\`\`\`${auction.bids.length == 0 ? '​' : auction.bids.slice(0, 15).map(a => `${a.user}: ${a.amount} ${auction.item.type}`).join('\n')}${auction.bids.length > 10 ? '\n...' : ''}\`\`\`` }
                 )
                 .setFooter({ text: `Opened by ${auction.host}` })

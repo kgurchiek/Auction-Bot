@@ -95,7 +95,7 @@ module.exports = {
             }
 
             let userBids;
-            ({ data: userBids, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item!inner(name, type, monster, tradeable), winner, price, host').eq('open', true).eq('item.type', auction.item.type).neq('item.name', auction.item.name).like('winner', `%${user.username}%`));
+            ({ data: userBids, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item!inner(name, type, monster, tradeable), winner, price, host, start').eq('open', true).eq('item.type', auction.item.type).neq('item.name', auction.item.name).like('winner', `%${user.username}%`));
             if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching User\'s Bids', error.message)] });
             userBids = userBids.filter(a => a.winner.split(', ').includes(user.username));
             let cost = userBids.reduce((a, b) => a + b.price, 0);
@@ -129,8 +129,11 @@ module.exports = {
                         const logEmbed = new EmbedBuilder()
                             .setColor('#00ff00')
                             .setTitle(`Auction for ${auction.item.name} (Open)`)
+                            .setDescription(`### Opened <t:${Math.floor(new Date(auction.start).getTime() / 1000)}:R>`)
+                            .setAuthor({ name: 'Heirloom\'s Auction Bot', iconURL: 'https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png' })
+                            .setThumbnail(`https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//${auction.item.monster.split('(')[0].replaceAll(' ', '')}.png`)
                             .addFields(
-                                { name: 'Next Bid', value: `${auction.bids.length == 0 ? 0 : auction.bids[0].amount + config.auction[auction.item.type].raise} ${auction.item.type}` },
+                                { name: 'Next Bid', value: `${auction.bids.length == 0 ? 0 : Math.round((auction.bids[0].amount + config.auction[auction.item.type].raise) * 10) / 10} ${auction.item.type}` },
                                 { name: 'Bids', value: `\`\`\`${auction.bids.length == 0 ? '​' : auction.bids.slice(0, 15).map(a => `${a.user}: ${a.amount} ${auction.item.type}`).join('\n')}${auction.bids.length > 10 ? '\n...' : ''}\`\`\`` }
                             )
                             .setFooter({ text: `Opened by ${auction.host}` })
@@ -176,11 +179,11 @@ module.exports = {
                 return;
             }
             
-            if (auction.bids.length > 0 && amount < auction.bids[auction.bids.length - 1].amount + raise && !(amount >= auction.bids[auction.bids.length - 1].amount + winRaise && amount == user[auction.item.type.toLowerCase()])) {
+            if (auction.bids.length > 0 && amount < Math.round((auction.bids[auction.bids.length - 1].amount + raise) * 10) / 10 && !(amount >= auction.bids[auction.bids.length - 1].amount + winRaise && amount == user[auction.item.type.toLowerCase()])) {
                 const errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .setTitle('Bid Too Low')
-                    .setDescription(`You must bid at least **${auction.bids[auction.bids.length - 1].amount + raise} ${auction.item.type}** to outbid the current highest bidder.`);
+                    .setDescription(`You must bid at least **${Math.round((auction.bids[auction.bids.length - 1].amount + raise) * 10) / 10} ${auction.item.type}** to outbid the current highest bidder.`);
                 await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
@@ -206,14 +209,18 @@ module.exports = {
             //     .setTitle('Bid Placed')
             //     .setDescription(`You have placed a bid of **${amount}** on **${auction.item.name}**.`);
             await interaction.editReply({ content: '​' });
+            await interaction.deleteReply();
 
             auction.bids.sort((a, b) => b.amount - a.amount);
             if (auctions[item]) {
                 const logEmbed = new EmbedBuilder()
                     .setColor('#00ff00')
                     .setTitle(`Auction for ${auction.item.name} (Open)`)
+                    .setDescription(`### Opened <t:${Math.floor(new Date(auction.start).getTime() / 1000)}:R>`)
+                    .setAuthor({ name: 'Heirloom\'s Auction Bot', iconURL: 'https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png' })
+                    .setThumbnail(`https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//${auction.item.monster.split('(')[0].replaceAll(' ', '')}.png`)
                     .addFields(
-                        { name: 'Next Bid', value: `${auction.bids[0].amount + config.auction[auction.item.type].raise} ${auction.item.type}` },
+                        { name: 'Next Bid', value: `${Math.round((auction.bids[0].amount + config.auction[auction.item.type].raise) * 10) / 10} ${auction.item.type}` },
                         { name: 'Bids', value: `\`\`\`${auction.bids.slice(0, 15).map(a => `${a.user}: ${a.amount} ${auction.item.type}`).join('\n')}${auction.bids.length > 10 ? '\n...' : ''}\`\`\`` }
                     )
                     .setFooter({ text: `Opened by ${auction.host}` })

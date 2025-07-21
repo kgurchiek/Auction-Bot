@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { errorEmbed } = require('../commonFunctions.js');
 const config = require('../config.json');
 
@@ -91,14 +91,15 @@ module.exports = {
         const dkpEmbed = new EmbedBuilder()
             .setColor('#00ff00')
             .setTitle(`Auction for ${monster} (Open)`)
+            .setDescription(`### Opened <t:${Math.floor(Date.now() / 1000)}:R>`)
             .setAuthor({ name: 'Heirloom\'s Auction Bot', iconURL: 'https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png' })
             .setThumbnail(`https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//${monster.split('(')[0].replaceAll(' ', '')}.png`)
             .setFooter({ text: `Opened by ${author.username}` })
             .setTimestamp();
-        const dkpButtons = new ActionRowBuilder()
+        const dkpDropdown = new ActionRowBuilder()
             .addComponents(
                 new StringSelectMenuBuilder()
-                    .setCustomId(`bid`)
+                    .setCustomId('bid')
                     .setPlaceholder('Select an item')
                     .addOptions(
                         ...rareex.filter(a => a.type == 'DKP').concat(tradeables.filter(a => a.type == 'DKP')).map(a =>
@@ -111,12 +112,15 @@ module.exports = {
         const pppEmbed = new EmbedBuilder()
             .setColor('#00ff00')
             .setTitle(`Auction for ${monster} (Open)`)
+            .setDescription(`### Opened <t:${Math.floor(Date.now() / 1000)}:R>`)
+            .setAuthor({ name: 'Heirloom\'s Auction Bot', iconURL: 'https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png' })
+            .setThumbnail(`https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//${monster.split('(')[0].replaceAll(' ', '')}.png`)
             .setFooter({ text: `Opened by ${author.username}` })
             .setTimestamp();
-        const pppButtons = new ActionRowBuilder()
+        const pppDropdown = new ActionRowBuilder()
             .addComponents(
                 new StringSelectMenuBuilder()
-                    .setCustomId(`bid`)
+                    .setCustomId('bid')
                     .setPlaceholder('Select an item')
                     .addOptions(
                        ...rareex.filter(a => a.type == 'PPP').concat(tradeables.filter(a => a.type == 'PPP')).map(a =>
@@ -126,10 +130,25 @@ module.exports = {
                         )
                     )
             )
+        const buttons = new ActionRowBuilder();
+        if (rareex.length) {
+            buttons.addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`closemonster-${monster}-false`)
+                    .setLabel('Close Rare/Ex')
+                    .setStyle(ButtonStyle.Primary)
+            )
+        }
+        buttons.addComponents(
+            new ButtonBuilder()
+                .setCustomId(`closeall-${monster}-false`)
+                .setLabel('Close Everything')
+                .setStyle(ButtonStyle.Danger)
+        )
         for (let item of rareex.concat(rareex.reduce((a, b) => a.find(c => c.type == b.type) ? a : a.concat({ type: b.type }), []), tradeables)) {
             let embed = item.type == 'DKP' ? dkpEmbed : pppEmbed;
             if (item.name == null) {
-                embed.addFields({ name: '​\n——————————————————————————', value: '​' });
+                if (rareex.length && tradeables.length) embed.addFields({ name: '​\n——————————————————————————', value: '​' });
                 continue;
             }
             let highestBids = auction.find(a => item.name == a.item.name).bids.filter((a, i, arr) => a.amount == arr[arr.length - 1].amount);
@@ -139,8 +158,8 @@ module.exports = {
         }
         auctions[monster] = {}
         try {
-            if (items.find(a => a.type == 'DKP')) auctions[monster].DKP = { embed: dkpEmbed, buttons: dkpButtons, message: await dkpChannel.send({ embeds: [dkpEmbed], components: [dkpButtons] }) };
-            if (items.find(a => a.type == 'PPP')) auctions[monster].PPP = { embed: pppEmbed, buttons: pppButtons, message: await pppChannel.send({ embeds: [pppEmbed], components: [pppButtons] }) };
+            if (items.find(a => a.type == 'DKP')) auctions[monster].DKP = { embed: dkpEmbed, buttons: [dkpDropdown, buttons], message: await dkpChannel.send({ embeds: [dkpEmbed], components: [dkpDropdown, buttons] }) };
+            if (items.find(a => a.type == 'PPP')) auctions[monster].PPP = { embed: pppEmbed, buttons: [pppDropdown, buttons], message: await pppChannel.send({ embeds: [pppEmbed], components: [pppDropdown, buttons] }) };
         } catch (err) {
             return await interaction.editReply({ content: '', embeds: [newEmbed, errorEmbed(`Error Sending Auction Message for ${monster}`, error.message)] });
         }

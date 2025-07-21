@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { errorEmbed } = require('../commonFunctions.js');
 const config = require('../config.json');
 
@@ -17,19 +17,36 @@ module.exports = {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(auctionList.filter(a => a.item.monster.toLowerCase().includes(focusedValue.value.toLowerCase())).filter((a, i, arr) => !arr.slice(0, i).map(a => a.item.monster).includes(a.item.monster) && auctions[a.item.monster] != null).map(a => ({ name: a.item.monster, value: a.item.monster })).slice(0, 25));
     },
-    ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets) {
-        let monster = interaction.options.getString('monster');
+    async buttonHandler(interaction, author, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets) {
+        let monster = interaction.customId.split('-')[1];
+        let confirmed = interaction.customId.split('-')[2] == 'true';
+        if (!confirmed) {
+            let confirmEmbed = new EmbedBuilder()
+                .setColor('#ffff00')
+                .setTitle('Confirmation')
+                .setDescription(`Are you sure you want to close all items from ${monster}?`)
+            let buttons = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`closeall-${monster}-true`)
+                        .setLabel('✓')
+                        .setStyle(ButtonStyle.Success)
+                )
+            await interaction.reply({ embeds: [confirmEmbed], components: [buttons], ephemeral: true });
+            return;
+        }
+        interaction.message.components[0].components[0].data.disabled = true;
+        await interaction.update({ components: interaction.message.components });
 
-        let { data: auctionList, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item!inner(name, type, monster)').eq('item.monster', monster).eq('open', true);
-        if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Monster', error.message)] });
+        let { data: auctionList, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item!inner(name, type, monster), start').eq('item.monster', monster).eq('open', true);
+        if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Fetching Monster', error.message)] });
 
         if (auctionList.length == 0) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
                 .setTitle('Error')
                 .setDescription(`There are no open auctions for **${monster}**.`);
-            await interaction.editReply({ embeds: [errorEmbed] });
+            await interaction.followUp({ embeds: [errorEmbed] });
 
             if (auctions[monster]) {
                 if (auctions[monster].DKP) {
@@ -62,7 +79,7 @@ module.exports = {
                 //     .setColor('#ff0000')
                 //     .setTitle('Account Frozen')
                 //     .setDescription('Your account is frozen. You cannot manage auctions or place bids on DKP items this time.');
-                // await interaction.editReply({ embeds: [errorEmbed] });
+                // await interaction.followUp({ embeds: [errorEmbed] });
                 // return;
                 // embeds.push(errorEmbed);
                 continue;
@@ -120,7 +137,7 @@ module.exports = {
                 }
             }
 
-            if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
+            if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
             let newEmbed;
             if (auction.bids.length == 0) {
                 newEmbed = new EmbedBuilder()
@@ -140,7 +157,7 @@ module.exports = {
                     .setTitle(`Auction Closed for ${auction.item.name}`)
                     .setDescription(`Bidding has been closed for **${monster}**.\nWinner: ${winner.user} (${winner.amount} ${auction.item.type})`)
             }
-            // await interaction.editReply({ embeds: [newEmbed] });
+            // await interaction.followUp({ embeds: [newEmbed] });
             // embeds.push(newEmbed);
 
             if (auctions[auction.item.name]?.[auction.item.type]) {
@@ -148,8 +165,11 @@ module.exports = {
                 const logEmbed = new EmbedBuilder()
                     .setColor('#00ff00')
                     .setTitle(`Auction for ${auction.item.name} (Closed)`)
+                    .setDescription(`### Opened <t:${Math.floor(new Date(auction.start).getTime() / 1000)}:R>`)
+                    .setAuthor({ name: 'Heirloom\'s Auction Bot', iconURL: 'https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png' })
+                    .setThumbnail(`https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//${monster.split('(')[0].replaceAll(' ', '')}.png`)
                     .addFields(
-                        { name: 'Next Bid', value: auction.bids.length == 0 ? `${config.auction[auction.item.type].min} ${auction.item.type}` : `${auction.bids[0].amount + config.auction[auction.item.type].raise} ${auction.item.type}` },
+                        { name: 'Next Bid', value: auction.bids.length == 0 ? `${config.auction[auction.item.type].min} ${auction.item.type}` : `${Math.round((auction.bids[0].amount + config.auction[auction.item.type].raise) * 10) / 10} ${auction.item.type}` },
                         { name: 'Bids', value: `\`\`\`${auction.bids.length == 0 ? '​' : auction.bids.slice(0, 15).map(a => `${a.user}: ${a.amount} ${auction.item.type}`).join('\n')}${auction.bids.length > 10 ? '\n...' : ''}\`\`\`` }
                     )
                     .setFooter({ text: `Closed by ${author.username}` })
@@ -160,10 +180,6 @@ module.exports = {
 
             closed.push(auction);
         }
-        const newEmbed = new EmbedBuilder()
-            .setColor(closed.length > 0 ? '#00ff00' : '#ff0000')
-            .setDescription(`Closed ${closed.length} item${closed.length == 1 ? '' : 's'}${frozen > 0 ? `\n**Warning:** ${frozen} item${frozen == 1 ? '' : 's'} couldn't be closed due to your account being frozen.` : ''}`);
-        await interaction.editReply({ embeds: [newEmbed] });
 
         if (auctionList.length > 0 && auctions[monster]) {
             if (auctions[monster].DKP) {

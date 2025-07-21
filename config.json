@@ -19,7 +19,8 @@
         "leaderboard": {
             "DKP": "",
             "PPP": ""
-        }
+        },
+        "unregistered": ""
     },
     "auction": {
         "DKP": {

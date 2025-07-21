@@ -19,29 +19,29 @@ const { google } = require('googleapis');
     let googleSheets = google.sheets({ version: 'v4', auth: googleClient });
 
     let auctionSheet = {
-        DKP: null,
-        PPP: null
+        DKP: [],
+        PPP: []
     }
     async function updateAuctionSheet() {
-        if (config.google.DKP.log == '') auctionSheet.DKP = [];
-        else {
+        if (config.google.DKP.log != '') {
             try {
-                auctionSheet.DKP = (await googleSheets.spreadsheets.values.get({
+                let sheet = (await googleSheets.spreadsheets.values.get({
                     spreadsheetId: config.google.DKP.id,
                     range: config.google.DKP.log
                 })).data.values;
+                if (sheet[0][0] == 'Member Name') auctionSheet.DKP = sheet;
             } catch (err) {
                 console.log('Error fetching auctions:', err);
             }
         }
 
-        if (config.google.PPP.log == '') auctionSheet.PPP = [];
-        else {
+        if (config.google.PPP.log != '') {
             try {
-                auctionSheet.PPP = (await googleSheets.spreadsheets.values.get({
+                let sheet = (await googleSheets.spreadsheets.values.get({
                     spreadsheetId: config.google.PPP.id,
                     range: config.google.PPP.log
                 })).data.values;
+                if (sheet[0][0] == 'Member Name') auctionSheet.PPP = sheet;
             } catch (err) {
                 console.log('Error fetching auctions:', err);
             }
@@ -83,11 +83,11 @@ const { google } = require('googleapis');
             let cost = 0;
             for (let item of auctionSheet.DKP) if (item[0] == row[0] && item.length < 7) cost += parseFloat(item[3]);
             // console.log(row[0], cost, 'DKP');
-            let { error } = await supabase.from(config.supabase.tables.users).update({ dkp: parseFloat(row[2]) - cost }).eq('username', row[0]);
-            if (error) {
-                console.log('Error updating dkp:', error.message);
-                continue;
-            }
+            supabase.from(config.supabase.tables.users).update({ dkp: parseFloat(row[2]) - cost }).eq('username', row[0])
+            .then(({ error }) => {
+                if (error) console.log('Error updating dkp:', error.message);
+            });
+            await new Promise(res => setTimeout(res, 500));
         }
     }
 
@@ -125,11 +125,11 @@ const { google } = require('googleapis');
             if (row[0] == '') continue;
             let cost = 0;
             for (let item of auctionSheet.PPP) if (item[0] == row[0] && item.length < 7) cost += parseFloat(item[3]);
-            let { error } = await supabase.from(config.supabase.tables.users).update({ ppp: parseFloat(row[2]) - cost }).eq('username', row[0]);
-            if (error) {
-                console.log('Error updating ppp:', error.message);
-                continue;
-            }
+            supabase.from(config.supabase.tables.users).update({ ppp: parseFloat(row[2]) - cost }).eq('username', row[0])
+            .then(({ error }) => {
+                if (error) console.log('Error updating ppp:', error.message);
+            });
+            await new Promise(res => setTimeout(res, 500));
         }
     }
 
@@ -143,11 +143,11 @@ const { google } = require('googleapis');
         tallySheet = sheet.slice(7).filter(a => a[0] != '');
         for (const row of tallySheet) {
             if (row[0] == '') continue;
-            let { error } = await supabase.from(config.supabase.tables.users).update({ frozen: row[2].toLowerCase() == 'true' }).eq('username', row[0]);
-            if (error) {
-                console.log('Error updating freeze:', error.message);
-                continue;
-            }
+            supabase.from(config.supabase.tables.users).update({ frozen: row[2].toLowerCase() == 'true' }).eq('username', row[0])
+            .then(({ error }) => {
+                if (error) console.log('Error updating freeze:', error.message);
+            })
+            await new Promise(res => setTimeout(res, 500));
         }
     }
 
@@ -302,7 +302,7 @@ const { google } = require('googleapis');
                 let errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .addFields({ name: 'Error', value: 'You must be a member of the server to use this bot.' });
-                await interaction.editReply({ embeds: [errorEmbed] });
+                await interaction.editReply({ embeds: [errorEmbed], components: [] });
                 return;
             }
             
@@ -312,7 +312,7 @@ const { google } = require('googleapis');
                     let errorEmbed = new EmbedBuilder()
                         .setColor('#ff0000')
                         .addFields({ name: 'Error', value: 'User not found. Use /register to begin.' });
-                    await interaction.editReply({ embeds: [errorEmbed] })
+                    await interaction.editReply({ embeds: [errorEmbed], components: [] });
                     return;
                 }
                 if (user.error) {
@@ -320,7 +320,7 @@ const { google } = require('googleapis');
                     let errorEmbed = new EmbedBuilder()
                         .setColor('#ff0000')
                         .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
-                    await interaction.editReply({ embeds: [errorEmbed] });
+                    await interaction.editReply({ embeds: [errorEmbed], components: [] });
                     return;
                 }
             }
@@ -338,7 +338,7 @@ const { google } = require('googleapis');
                     .setTitle('Error Executing Command')
                     .setDescription(String(error.message))
                 try {
-                    await interaction.editReply({ embeds: [errorEmbed] })
+                    await interaction.editReply({ embeds: [errorEmbed], components: [] })
                 } catch (e) {}
             }
         }
@@ -356,19 +356,20 @@ const { google } = require('googleapis');
             }
         }
         if (interaction.isButton()) {
+            let user = await getUser(interaction.user.id);
+
             const command = client.commands.get(interaction.customId.split('-')[0]);
-            if (command?.buttonHandler) command.buttonHandler(interaction);
+            if (command?.buttonHandler) command.buttonHandler(interaction, user, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, itemList);
         }
         if (interaction.isAnySelectMenu()) {
             let user = await getUser(interaction.user.id);
 
             const command = client.commands.get(interaction.customId.split('-')[0]);
-            if (command?.buttonHandler) command.selectHandler(interaction, user);
+            if (command?.selectHandler) command.selectHandler(interaction, user);
         }
         if (interaction.isModalSubmit()) {
             const command = client.commands.get(interaction.customId.split('-')[0]);
             if (command == null) return;
-            await interaction.deferReply({ ephemeral: command.ephemeral });
 
             let user = await getUser(interaction.user.id);
             if (user.error) {
@@ -376,11 +377,11 @@ const { google } = require('googleapis');
                 let errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
-                await interaction.editReply({ embeds: [errorEmbed] });
+                await interaction.editReply({ embeds: [errorEmbed], components: [] });
                 return;
             }
 
-            if (command?.buttonHandler) command.modalHandler(interaction, user, supabase, auctions);
+            if (command?.modalHandler) command.modalHandler(interaction, user, supabase, auctions);
         }
     });
 
@@ -393,8 +394,8 @@ const { google } = require('googleapis');
             if (auction.PPP && auction.PPP?.message.guildId == message.guildId && auction.PPP?.message.channelId == message.channelId && auction.PPP?.message.id == message.id) foundPPP = true;
             if (!(foundDKP || foundPPP)) continue;
             if (auctionList.find(a => a.item.name == item) || auctionList.find(a => a.item.monster == item)) {
-                if (foundDKP) auction.DKP.message = await dkpChannel.send({ embeds: [auction.DKP.embed], components: [auction.DKP.buttons] });
-                if (foundPPP) auction.PPP.message = await pppChannel.send({ embeds: [auction.PPP.embed], components: [auction.PPP.buttons] });
+                if (foundDKP) auction.DKP.message = await dkpChannel.send({ embeds: [auction.DKP.embed], components: auction.DKP.buttons });
+                if (foundPPP) auction.PPP.message = await pppChannel.send({ embeds: [auction.PPP.embed], components: auction.PPP.buttons });
             } else delete auctions[item];
         }
         try {

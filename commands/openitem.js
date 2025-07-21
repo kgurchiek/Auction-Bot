@@ -2,6 +2,7 @@ const fs = require('fs');
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { errorEmbed } = require('../commonFunctions.js');
 const config = require('../config.json');
+const { buttonHandler } = require('./bid.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -65,6 +66,9 @@ module.exports = {
         const logEmbed = new EmbedBuilder()
             .setColor('#00ff00')
             .setTitle(`Auction for ${item.name} (Open)`)
+            .setDescription(`### Opened <t:${Math.floor(Date.now() / 1000)}:R>`)
+            .setAuthor({ name: 'Heirloom\'s Auction Bot', iconURL: 'https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png' })
+            .setThumbnail(`https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//${item.monster.split('(')[0].replaceAll(' ', '')}.png`)
             .addFields(
                 { name: 'Next Bid', value: `${config.auction[item.type].min} ${item.type}` },
                 { name: 'Bids', value: '```​```' }
@@ -76,7 +80,11 @@ module.exports = {
                 new ButtonBuilder()
                     .setCustomId(`bid-${item.name}`)
                     .setStyle(ButtonStyle.Primary)
-                    .setLabel('Bid')
+                    .setLabel('Bid'),
+                new ButtonBuilder()
+                    .setCustomId(`closeitem-${item.name}-false`)
+                    .setStyle(ButtonStyle.Danger)
+                    .setLabel('Close')
             );
         (auctions[item.name] = {})[item.type] = { embed: logEmbed, buttons: logButtons }
         try  {
