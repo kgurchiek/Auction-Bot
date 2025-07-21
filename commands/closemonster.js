@@ -206,7 +206,7 @@ module.exports = {
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     let newButtons = auctions[monster].DKP.buttons;
                     newButtons[0].components[0].options = newButtons[0].components[0].options.filter(a => (a.data || a).value.split('-')[1] == 'true');
-                    newButtons[1].components = newButtons[1].components.filter(a => a.custom_id.split('-')[0] != 'closemonster');
+                    newButtons[1].components = newButtons[1].components.filter(a => (a.data || a).custom_id.split('-')[0] != 'closemonster');
                     for (let field of newEmbed.fields) {
                         if (field.name.endsWith('(Closed)')) continue;
                         let item = itemList.find(a => field.name.startsWith(`${a.tradeable ? '💰 ' : ''}**[${a.name}]**`));
@@ -222,7 +222,7 @@ module.exports = {
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     let newButtons = auctions[monster].PPP.buttons;
                     newButtons[0].components[0].options = newButtons[0].components[0].options.filter(a => (a.data || a).value.split('-')[1] == 'true');
-                    newButtons[1].components = newButtons[1].components.filter(a => a.custom_id.split('-')[0] != 'closemonster');
+                    newButtons[1].components = newButtons[1].components.filter(a => (a.data || a).custom_id.split('-')[0] != 'closemonster');
                     for (let field of newEmbed.fields) {
                         if (field.name.endsWith('(Closed)')) continue;
                         let item = itemList.find(a => field.name.startsWith(`${a.tradeable ? '💰 ' : ''}**[${a.name}]**`));
