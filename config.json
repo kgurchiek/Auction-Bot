@@ -20,7 +20,8 @@
             "DKP": "",
             "PPP": ""
         },
-        "unregistered": ""
+        "unregistered": "",
+        "mismatch": ""
     },
     "auction": {
         "DKP": {

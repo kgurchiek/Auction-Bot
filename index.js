@@ -189,6 +189,25 @@ const { google } = require('googleapis');
             // console.log('Error fetching user list:', error.message);
             await new Promise(res => setTimeout(res, 1000));
         }
+
+        if (tallySheet != null && mismatchChannel != null) {
+            let members = userList.filter(a => tallySheet.find(b => b[0] == a.username) == null).sort((a, b) => a.username > b.username ? 1 : -1);
+            let messages = Array.from((await mismatchChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
+            let embeds = [];
+            embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Mismatched Users').setDescription('```\n'));
+            members.forEach((member, i) => {
+                let string = `${i + 1}${' '.repeat(String(members.length).length - String(i + 1).length)} | ${member.username}\n`;
+                if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
+                embeds[embeds.length - 1].data.description += string;
+            })
+            embeds.forEach((a, i) => {
+                a.data.description += '```';
+                if (messages[i]) messages[i].edit({ embeds: [a] });
+                else mismatchChannel.send({ embeds: [a] });
+            });
+            for (let message of messages.slice(embeds.length)) await message.delete();
+        }
+
         setTimeout(updateUsers);
     }
     updateUsers();
@@ -237,6 +256,7 @@ const { google } = require('googleapis');
     let dkpLeaderboard;
     let pppLeaderboard;
     let unregisteredChannel;
+    let mismatchChannel;
     client.once(Events.ClientReady, async () => {
         console.log(`[Bot]: ${client.user.tag}`);
         console.log(`[Servers]: ${client.guilds.cache.size}`);
@@ -247,6 +267,7 @@ const { google } = require('googleapis');
         dkpLeaderboard = await client.channels.fetch(config.discord.leaderboard.DKP);
         pppLeaderboard = await client.channels.fetch(config.discord.leaderboard.PPP);
         if (config.discord.unregistered != '') unregisteredChannel = await client.channels.fetch(config.discord.unregistered);
+        if (config.discord.mismatch != '') mismatchChannel = await client.channels.fetch(config.discord.mismatch);
 
         for (const item in auctions) {
             if (auctions[item].DKP) {
