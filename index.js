@@ -208,7 +208,7 @@ const { google } = require('googleapis');
             for (let message of messages.slice(embeds.length)) await message.delete();
         }
 
-        setTimeout(updateUsers);
+        setTimeout(updateUsers, 1000);
     }
     updateUsers();
 
