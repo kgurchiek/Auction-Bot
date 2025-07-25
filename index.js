@@ -54,7 +54,10 @@ const { google } = require('googleapis');
             spreadsheetId: config.google.DKP.id,
             range: config.google.DKP.sheet
         })).data.values;
-        if (sheet[0][1] != 'Lifetime Points') return;
+        if (sheet[0][1] != 'Lifetime Points') {
+          console.log('Invalid dkp sheet:', sheet[0]);
+          return;
+        }
         dkpSheet = sheet.slice(1).filter(a => a[0] != '');
 
         dkpSheet.sort((a, b) => b[2] - a[2]);
@@ -87,8 +90,9 @@ const { google } = require('googleapis');
             .then(({ error }) => {
                 if (error) console.log('Error updating dkp:', error.message);
             });
-            await new Promise(res => setTimeout(res, 500));
+            await new Promise(res => setTimeout(res, 50));
         }
+        console.log('Updated dkp sheet');
     }
 
     let pppSheet;
@@ -97,7 +101,10 @@ const { google } = require('googleapis');
             spreadsheetId: config.google.PPP.id,
             range: config.google.PPP.sheet
         })).data.values;
-        if (sheet[0][0] != 'Member') return;
+        if (sheet[0][0] != 'Member') {
+          console.log('Invalid ppp sheet:', sheet[0]);
+          return;
+        }
         pppSheet = sheet.slice(1).filter(a => a[0] != '');
 
         pppSheet.sort((a, b) => b[2] - a[2]);
@@ -129,8 +136,9 @@ const { google } = require('googleapis');
             .then(({ error }) => {
                 if (error) console.log('Error updating ppp:', error.message);
             });
-            await new Promise(res => setTimeout(res, 500));
+            await new Promise(res => setTimeout(res, 50));
         }
+        console.log('Updated ppp sheet');
     }
 
     let tallySheet;
@@ -139,7 +147,10 @@ const { google } = require('googleapis');
             spreadsheetId: config.google.tally.id,
             range: config.google.tally.sheet
         })).data.values;
-        if (sheet[0][0] != 'Notes') return;
+        if (sheet[0][0] != 'Notes') {
+          console.log('Invalid tally sheet:', sheet[0]);
+          return;
+        }
         tallySheet = sheet.slice(7).filter(a => a[0] != '');
         for (const row of tallySheet) {
             if (row[0] == '') continue;
@@ -147,13 +158,16 @@ const { google } = require('googleapis');
             .then(({ error }) => {
                 if (error) console.log('Error updating freeze:', error.message);
             })
-            await new Promise(res => setTimeout(res, 500));
+            await new Promise(res => setTimeout(res, 50));
         }
+        console.log('Updated tally sheet');
     }
 
     async function updateSheets() {
         await updateAuctionSheet();
+        console.log('Updated auction sheets');
         await Promise.all([updateDKPSheet(), updatePPPSheet(), updateTallySheet()]);
+        console.log('Updated sheets');
         setTimeout(updateSheets, 1000 * 10);
     }
 
@@ -192,6 +206,7 @@ const { google } = require('googleapis');
 
         if (tallySheet != null && mismatchChannel != null) {
             let members = userList.filter(a => tallySheet.find(b => b[0] == a.username) == null).sort((a, b) => a.username > b.username ? 1 : -1);
+            console.log(userList.length, members.length, members.map(a => a.username));
             let messages = Array.from((await mismatchChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
             let embeds = [];
             embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Mismatched Users').setDescription('```\n'));
@@ -216,7 +231,7 @@ const { google } = require('googleapis');
         if (unregisteredChannel == null) return;
         let members = Array.from((await guild.members.fetch()).values()).filter(a => !a.user.bot);
         members = members.map(a => new Promise(async res => res({ member: a, account: await supabase.from(config.supabase.tables.users).select('id::text').eq('id', a.id)})));
-        members = (await Promise.all(members)).filter(a => a.account.data.length == 0).map(a => a.member);
+        members = (await Promise.all(members)).filter(a => a.account.data?.length == 0).map(a => a.member);
         members.sort((a, b) => a.user.username > b.user.username ? 1 : -1);
 
         let messages = Array.from((await unregisteredChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
