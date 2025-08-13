@@ -28,10 +28,12 @@ module.exports = {
             );
         interaction.showModal(modal);
     },
-    async selectHandler(interaction, author) {
+    async selectHandler(interaction, author, auctions) {
+        const [item, tradeable, type, monster] = interaction.values[0].split('-');
+        console.log(interaction.values[0].split('-'), item, tradeable, type, monster);
         const modal = new ModalBuilder()
-            .setCustomId(`bid-${interaction.values[0]}`)
-            .setTitle(interaction.values[0])
+            .setCustomId(`bid-${item}`)
+            .setTitle(item)
             .addComponents(
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
@@ -40,6 +42,7 @@ module.exports = {
                     .setStyle(TextInputStyle.Short)
                 )
             );
+        if (auctions[monster]?.[type]) await auctions[monster][type].message.edit({ embeds: [auctions[monster][type].embed] });
         await interaction.showModal(modal);
     },
     async modalHandler(interaction, author, supabase, auctions) {

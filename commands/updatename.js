@@ -21,7 +21,7 @@ module.exports = {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(tallySheet.map(a => a[0]).filter(a => a.toLowerCase().includes(focusedValue.value.toLowerCase())).map(choice => ({ name: choice, value: choice })).slice(0, 25));
     },
-    ephemeral: false,
+    ephemeral: true,
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
         const user = interaction.options.getUser('user');
         const name = interaction.options.getString('name');

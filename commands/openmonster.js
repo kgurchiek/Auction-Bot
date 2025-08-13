@@ -105,7 +105,7 @@ module.exports = {
                         ...rareex.filter(a => a.type == 'DKP').concat(tradeables.filter(a => a.type == 'DKP')).map(a =>
                             new StringSelectMenuOptionBuilder()
                                 .setLabel(a.name)
-                                .setValue(`${a.name}-${a.tradeable}`)
+                                .setValue(`${a.name}-${a.tradeable}-${a.type}-${a.monster}`)
                         )
                     )
             )
@@ -126,7 +126,7 @@ module.exports = {
                        ...rareex.filter(a => a.type == 'PPP').concat(tradeables.filter(a => a.type == 'PPP')).map(a =>
                             new StringSelectMenuOptionBuilder()
                                 .setLabel(a.name)
-                                .setValue(`${a.name}-${a.tradeable}`)
+                                .setValue(`${a.name}-${a.tradeable}-${a.type}-${a.monster}`)
                         )
                     )
             )
