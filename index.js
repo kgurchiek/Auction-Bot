@@ -404,7 +404,10 @@ const { google } = require('googleapis');
         }
         if (interaction.isModalSubmit()) {
             const command = client.commands.get(interaction.customId.split('-')[0]);
-            if (command == null) return;
+            if (command == null) {
+                console.log(`Unknown command "${interaction.customId.split('-')[0]}"`);
+                return;
+            }
 
             let user = await getUser(interaction.user.id);
             if (user.error) {

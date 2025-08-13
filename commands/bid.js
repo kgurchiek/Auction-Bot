@@ -17,7 +17,7 @@ module.exports = {
     async buttonHandler(interaction, author) {
         const modal = new ModalBuilder()
             .setCustomId(`bid-${interaction.customId.split('-')[1]}`)
-            .setTitle('Bid')
+            .setTitle(interaction.customId.split('-')[1])
             .addComponents(
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
