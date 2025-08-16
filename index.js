@@ -81,16 +81,16 @@ const { google } = require('googleapis');
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
 
-        for (const row of dkpSheet) {
-            if (row[0] == '') continue;
+        dkpSheet = dkpSheet.map(a => {
             let cost = 0;
-            for (let item of auctionSheet.DKP) if (item[0] == row[0] && item.length < 7) cost += parseFloat(item[3]);
-            // console.log(row[0], cost, 'DKP');
-            supabase.from(config.supabase.tables.users).update({ dkp: parseFloat(row[2]) - cost }).eq('username', row[0])
-            .then(({ error }) => {
-                if (error) console.log('Error updating dkp:', error.message);
-            });
-            await new Promise(res => setTimeout(res, 50));
+            a = { username: a[0] }
+            for (let item of auctionSheet.DKP) if (item[0] == a[0] && item.length < 7) cost += parseFloat(item[3]);
+            a.dkp = parseFloat(a[2]) - cost;
+            return a;
+        });
+        if (dkpSheet.length > 0) {
+            let { error } = await supabase.from(config.supabase.tables.users).upsert(dkpSheet, { onConflict: ['username'] });
+            if (error) console.log('Error updating dkp:', error.message);
         }
         console.log('Updated dkp sheet');
     }
@@ -128,15 +128,16 @@ const { google } = require('googleapis');
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
 
-        for (const row of pppSheet) {
-            if (row[0] == '') continue;
+        pppSheet = pppSheet.map(a => {
             let cost = 0;
-            for (let item of auctionSheet.PPP) if (item[0] == row[0] && item.length < 7) cost += parseFloat(item[3]);
-            supabase.from(config.supabase.tables.users).update({ ppp: parseFloat(row[2]) - cost }).eq('username', row[0])
-            .then(({ error }) => {
-                if (error) console.log('Error updating ppp:', error.message);
-            });
-            await new Promise(res => setTimeout(res, 50));
+            a = { username: a[0] }
+            for (let item of auctionSheet.PPP) if (item[0] == a[0] && item.length < 7) cost += parseFloat(item[3]);
+            a.ppp = parseFloat(a[2]) - cost;
+            return a;
+        });
+        if (pppSheet.length > 0) {
+            let { error } = await supabase.from(config.supabase.tables.users).upsert(pppSheet, { onConflict: ['username'] });
+            if (error) console.log('Error updating ppp:', error.message);
         }
         console.log('Updated ppp sheet');
     }
@@ -151,14 +152,11 @@ const { google } = require('googleapis');
           console.log('Invalid tally sheet:', sheet[0]);
           return;
         }
-        tallySheet = sheet.slice(7).filter(a => a[0] != '');
-        for (const row of tallySheet) {
-            if (row[0] == '') continue;
-            supabase.from(config.supabase.tables.users).update({ frozen: row[2].toLowerCase() == 'true' }).eq('username', row[0])
-            .then(({ error }) => {
-                if (error) console.log('Error updating freeze:', error.message);
-            })
-            await new Promise(res => setTimeout(res, 50));
+        tallySheet = sheet.slice(7).filter(a => a[0] != '').map(a => ({ username: a[0], frozen: a[2].toLowerCase() == 'true' }));
+        
+        if (tallySheet.length > 0) {
+            let { error } = await supabase.from(config.supabase.tables.users).upsert(tallySheet, { onConflict: ['username'] });
+            if (error) console.log('Error updating tally:', error.message);
         }
         console.log('Updated tally sheet');
     }
