@@ -81,15 +81,15 @@ const { google } = require('googleapis');
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
 
-        dkpSheet = dkpSheet.map(a => {
+        let updates = dkpSheet.map(a => {
             let cost = 0;
             a = { username: a[0] }
             for (let item of auctionSheet.DKP) if (item[0] == a[0] && item.length < 7) cost += parseFloat(item[3]);
             a.dkp = parseFloat(a[2]) - cost;
             return a;
         });
-        if (dkpSheet.length > 0) {
-            let { error } = await supabase.from(config.supabase.tables.users).upsert(dkpSheet, { onConflict: ['username'] });
+        if (updates.length > 0) {
+            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['username'] });
             if (error) console.log('Error updating dkp:', error.message);
         }
         console.log('Updated dkp sheet');
@@ -128,15 +128,15 @@ const { google } = require('googleapis');
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
 
-        pppSheet = pppSheet.map(a => {
+        let updates = pppSheet.map(a => {
             let cost = 0;
             a = { username: a[0] }
             for (let item of auctionSheet.PPP) if (item[0] == a[0] && item.length < 7) cost += parseFloat(item[3]);
             a.ppp = parseFloat(a[2]) - cost;
             return a;
         });
-        if (pppSheet.length > 0) {
-            let { error } = await supabase.from(config.supabase.tables.users).upsert(pppSheet, { onConflict: ['username'] });
+        if (updates.length > 0) {
+            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['username'] });
             if (error) console.log('Error updating ppp:', error.message);
         }
         console.log('Updated ppp sheet');
@@ -152,10 +152,11 @@ const { google } = require('googleapis');
           console.log('Invalid tally sheet:', sheet[0]);
           return;
         }
-        tallySheet = sheet.slice(7).filter(a => a[0] != '').map(a => ({ username: a[0], frozen: a[2].toLowerCase() == 'true' }));
-        
-        if (tallySheet.length > 0) {
-            let { error } = await supabase.from(config.supabase.tables.users).upsert(tallySheet, { onConflict: ['username'] });
+        tallySheet = sheet.slice(7).filter(a => a[0] != '');
+
+        let updates = tallySheet.map(a => ({ username: a[0], frozen: a[2].toLowerCase() == 'true' }));
+        if (updates.length > 0) {
+            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['username'] });
             if (error) console.log('Error updating tally:', error.message);
         }
         console.log('Updated tally sheet');
