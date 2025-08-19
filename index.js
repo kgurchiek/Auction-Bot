@@ -93,7 +93,7 @@ const { google } = require('googleapis');
         updates = updates.filter(a => a.id != null);
         if (updates.length > 0) {
             let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
-            if (error) console.log('Error updating dkp:', error.message);
+            if (error) console.log('Error updating dkp:', error);
         }
         console.log('Updated dkp sheet');
     }
@@ -142,7 +142,7 @@ const { google } = require('googleapis');
         updates = updates.filter(a => a.id != null);
         if (updates.length > 0) {
             let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
-            if (error) console.log('Error updating ppp:', error.message);
+            if (error) console.log('Error updating ppp:', error);
         }
         console.log('Updated ppp sheet');
     }
@@ -166,7 +166,7 @@ const { google } = require('googleapis');
         updates = updates.filter(a => a.id != null);
         if (updates.length > 0) {
             let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
-            if (error) console.log('Error updating tally:', error.message);
+            if (error) console.log('Error updating tally:', error);
         }
         console.log('Updated tally sheet');
     }
