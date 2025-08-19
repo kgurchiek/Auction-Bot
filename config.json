@@ -13,6 +13,7 @@
         "id": "",
         "server": "",
         "staffRoles": [""],
+        "inactiveRole": "",
         "dkpChannel": "",
         "pppChannel": "",
         "rollChannel": "",
