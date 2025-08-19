@@ -60,7 +60,7 @@ const { google } = require('googleapis');
         }
         dkpSheet = sheet.slice(1).filter(a => a[0] != '');
 
-        dkpSheet.sort((a, b) => b[2] > a[2] ? 1 : -1);
+        dkpSheet.sort((a, b) => b[2] - a[2]);
         let messages = Array.from((await dkpLeaderboard.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
         let embeds = [];
         let longestRank = Math.max(String(dkpSheet.length).length + 1, 'Live Rank'.length);
@@ -110,7 +110,7 @@ const { google } = require('googleapis');
         }
         pppSheet = sheet.slice(1).filter(a => a[0] != '');
 
-        pppSheet.sort((a, b) => b[2] > a[2] ? 1 : -1);
+        pppSheet.sort((a, b) => b[2] - a[2]);
         let messages = Array.from((await pppLeaderboard.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
         let embeds = [];
         let longestRank = Math.max(String(pppSheet.length).length + 1, 'Live Rank'.length);
