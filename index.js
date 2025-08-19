@@ -60,7 +60,7 @@ const { google } = require('googleapis');
         }
         dkpSheet = sheet.slice(1).filter(a => a[0] != '');
 
-        dkpSheet.sort((a, b) => b[2] - a[2]);
+        dkpSheet.sort((a, b) => b[2] > a[2] ? 1 : -1);
         let messages = Array.from((await dkpLeaderboard.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
         let embeds = [];
         let longestRank = Math.max(String(dkpSheet.length).length + 1, 'Live Rank'.length);
@@ -81,15 +81,18 @@ const { google } = require('googleapis');
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
 
+        if (userList == null) return;
         let updates = dkpSheet.map(a => {
             let cost = 0;
-            a = { username: a[0] }
             for (let item of auctionSheet.DKP) if (item[0] == a[0] && item.length < 7) cost += parseFloat(item[3]);
-            a.dkp = parseFloat(a[2]) - cost;
-            return a;
+            return {
+              ...userList.find(b => b.username == a[0]),
+              dkp: parseFloat(a[2]) - cost
+            }
         });
+        updates = updates.filter(a => a.id != null);
         if (updates.length > 0) {
-            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['username'] });
+            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
             if (error) console.log('Error updating dkp:', error.message);
         }
         console.log('Updated dkp sheet');
@@ -107,7 +110,7 @@ const { google } = require('googleapis');
         }
         pppSheet = sheet.slice(1).filter(a => a[0] != '');
 
-        pppSheet.sort((a, b) => b[2] - a[2]);
+        pppSheet.sort((a, b) => b[2] > a[2] ? 1 : -1);
         let messages = Array.from((await pppLeaderboard.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
         let embeds = [];
         let longestRank = Math.max(String(pppSheet.length).length + 1, 'Live Rank'.length);
@@ -130,13 +133,15 @@ const { google } = require('googleapis');
 
         let updates = pppSheet.map(a => {
             let cost = 0;
-            a = { username: a[0] }
             for (let item of auctionSheet.PPP) if (item[0] == a[0] && item.length < 7) cost += parseFloat(item[3]);
-            a.ppp = parseFloat(a[2]) - cost;
-            return a;
+            return {
+              ...userList.find(b => b.username == a[0]),
+              ppp: parseFloat(a[2]) - cost
+            }
         });
+        updates = updates.filter(a => a.id != null);
         if (updates.length > 0) {
-            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['username'] });
+            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
             if (error) console.log('Error updating ppp:', error.message);
         }
         console.log('Updated ppp sheet');
@@ -154,9 +159,13 @@ const { google } = require('googleapis');
         }
         tallySheet = sheet.slice(7).filter(a => a[0] != '');
 
-        let updates = tallySheet.map(a => ({ username: a[0], frozen: a[2].toLowerCase() == 'true' }));
+        let updates = tallySheet.map(a => ({
+            ...userList.find(b => b.username == a[0]),
+            frozen: a[2].toLowerCase() == 'true'
+        }));
+        updates = updates.filter(a => a.id != null);
         if (updates.length > 0) {
-            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['username'] });
+            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
             if (error) console.log('Error updating tally:', error.message);
         }
         console.log('Updated tally sheet');
