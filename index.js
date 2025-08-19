@@ -236,7 +236,7 @@ const { google } = require('googleapis');
 
     async function updateUnregistered() {
         if (unregisteredChannel == null) return;
-        let members = Array.from((await guild.members.fetch()).values()).filter(a => !a.user.bot);
+        let members = Array.from((await guild.members.fetch()).values()).filter(a => !a.user.bot && !(a.nickname || '').startsWith('zzz'));
         members = members.map(a => new Promise(async res => res({ member: a, account: await supabase.from(config.supabase.tables.users).select('id::text').eq('id', a.id)})));
         members = (await Promise.all(members)).filter(a => a.account.data?.length == 0).map(a => a.member);
         members.sort((a, b) => a.user.username > b.user.username ? 1 : -1);
