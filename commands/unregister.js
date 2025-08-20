@@ -20,6 +20,15 @@ module.exports = {
     async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
         const username = interaction.options.getString('username');
 
+        if (!author.staff) {
+            const errorEmbed = new EmbedBuilder()
+                .setColor('#ff0000')
+                .setTitle('Error')
+                .setDescription(`This command is only available to staff.`);
+            await interaction.editReply({ embeds: [errorEmbed] });
+            return;
+        }
+
         if ((await supabase.from(config.supabase.tables.users).select('*').eq('id', interaction.user.id).limit(1)).data[0] == null) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
