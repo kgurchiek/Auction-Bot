@@ -55,8 +55,8 @@ const { google } = require('googleapis');
             range: config.google.DKP.sheet
         })).data.values;
         if (sheet[0][1] != 'Lifetime Points') {
-          console.log('Invalid dkp sheet:', sheet[0]);
-          return;
+            console.log('Invalid dkp sheet:', sheet[0]);
+            return;
         }
         dkpSheet = sheet.slice(1).filter(a => a[0] != '');
 
@@ -105,8 +105,8 @@ const { google } = require('googleapis');
             range: config.google.PPP.sheet
         })).data.values;
         if (sheet[0][0] != 'Member') {
-          console.log('Invalid ppp sheet:', sheet[0]);
-          return;
+            console.log('Invalid ppp sheet:', sheet[0]);
+            return;
         }
         pppSheet = sheet.slice(1).filter(a => a[0] != '');
 
@@ -154,8 +154,8 @@ const { google } = require('googleapis');
             range: config.google.tally.sheet
         })).data.values;
         if (sheet[0][0] != 'Notes') {
-          console.log('Invalid tally sheet:', sheet[0]);
-          return;
+            console.log('Invalid tally sheet:', sheet[0]);
+            return;
         }
         tallySheet = sheet.slice(7).filter(a => a[0] != '');
 
@@ -176,7 +176,7 @@ const { google } = require('googleapis');
         console.log('Updated auction sheets');
         await Promise.all([updateDKPSheet(), updatePPPSheet(), updateTallySheet()]);
         console.log('Updated sheets');
-        setTimeout(updateSheets, 1000 * 10);
+        setTimeout(updateSheets, 1000 * 15);
     }
 
     let itemList;
@@ -211,8 +211,10 @@ const { google } = require('googleapis');
             // console.log('Error fetching user list:', error.message);
             await new Promise(res => setTimeout(res, 1000));
         }
-
+        console.log('Updated user list');
+        
         if (tallySheet != null && mismatchChannel != null) {
+            console.log(userList.map(a => a.username))
             let members = userList.filter(a => tallySheet.find(b => b[0] == a.username) == null).sort((a, b) => a.username > b.username ? 1 : -1);
             let messages = Array.from((await mismatchChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
             let embeds = [];
@@ -228,6 +230,8 @@ const { google } = require('googleapis');
                 else mismatchChannel.send({ embeds: [a] });
             });
             for (let message of messages.slice(embeds.length)) await message.delete();
+            
+            console.log('Updated mismatch list');
         }
 
         setTimeout(updateUsers, 1000);
@@ -255,6 +259,8 @@ const { google } = require('googleapis');
             else unregisteredChannel.send({ embeds: [a] });
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
+
+        console.log('Updated unregistered list')
 
         setTimeout(updateUnregistered, 1000 * 60 * 5);
     }
