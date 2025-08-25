@@ -214,7 +214,6 @@ const { google } = require('googleapis');
         console.log('Updated user list');
         
         if (tallySheet != null && mismatchChannel != null) {
-            console.log(userList.map(a => a.username))
             let members = userList.filter(a => tallySheet.find(b => b[0] == a.username) == null).sort((a, b) => a.username > b.username ? 1 : -1);
             let messages = Array.from((await mismatchChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
             let embeds = [];
