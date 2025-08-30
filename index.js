@@ -227,8 +227,10 @@ const { google } = require('googleapis');
             })
             embeds.forEach(async (a, i) => {
                 a.data.description += '```';
-                if (messages[i] == null) await mismatchChannel.send({ embeds: [a] });
-                else console.log('[Mismatch List]: Edited Message:', await messages[i].edit({ embeds: [a] }));
+                if (i < messages.length) {
+                    console.log(JSON.stringify(a, 0, 2));
+                    await messages[i].edit({ embeds: [a] });
+                } else await mismatchChannel.send({ embeds: [a] });
             });
             for (let message of messages.slice(embeds.length)) await message.delete();
             
