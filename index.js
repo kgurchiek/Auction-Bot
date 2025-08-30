@@ -216,6 +216,7 @@ const { google } = require('googleapis');
         
         if (tallySheet != null && mismatchChannel != null) {
             let members = userList.filter(a => tallySheet.find(b => b[0] == a.username) == null).sort((a, b) => a.username > b.username ? 1 : -1);
+            console.log(members.map(a => a.username));
             let messages = Array.from((await mismatchChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
             let embeds = [];
             embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Mismatched Users').setDescription('```\n'));
