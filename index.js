@@ -223,10 +223,10 @@ const { google } = require('googleapis');
                 if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
                 embeds[embeds.length - 1].data.description += string;
             })
-            embeds.forEach((a, i) => {
+            embeds.forEach(async (a, i) => {
                 a.data.description += '```';
-                if (messages[i]) messages[i].edit({ embeds: [a] });
-                else mismatchChannel.send({ embeds: [a] });
+                if (messages[i] == null) await mismatchChannel.send({ embeds: [a] });
+                else await messages[i].edit({ embeds: [a] });
             });
             for (let message of messages.slice(embeds.length)) await message.delete();
             
