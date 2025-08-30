@@ -30,7 +30,6 @@ module.exports = {
     },
     async selectHandler(interaction, author, auctions) {
         const [item, tradeable, type, monster] = interaction.values[0].split('-');
-        console.log(interaction.values[0].split('-'), item, tradeable, type, monster);
         const modal = new ModalBuilder()
             .setCustomId(`bid-${item}`)
             .setTitle(item)
