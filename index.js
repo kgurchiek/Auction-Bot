@@ -46,6 +46,7 @@ const { google } = require('googleapis');
                 console.log('Error fetching auctions:', err);
             }
         }
+        console.log(`[Auction Sheet]: Updated`);
     }
 
     let dkpSheet;
@@ -94,8 +95,8 @@ const { google } = require('googleapis');
         if (updates.length > 0) {
             let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
             if (error) console.log('Error updating dkp:', error);
+            else console.log(`[DKP Sheet]: Updated ${updates.length} users.`);
         }
-        console.log('Updated dkp sheet');
     }
 
     let pppSheet;
@@ -143,8 +144,8 @@ const { google } = require('googleapis');
         if (updates.length > 0) {
             let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
             if (error) console.log('Error updating ppp:', error);
+            else console.log(`[PPP Sheet]: Updated ${updates.length} users.`);
         }
-        console.log('Updated ppp sheet');
     }
 
     let tallySheet;
@@ -167,15 +168,13 @@ const { google } = require('googleapis');
         if (updates.length > 0) {
             let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
             if (error) console.log('Error updating tally:', error);
+            else console.log(`[Tally Sheet]: Updated ${updates.length} users.`);
         }
-        console.log('Updated tally sheet');
     }
 
     async function updateSheets() {
         await updateAuctionSheet();
-        console.log('Updated auction sheets');
         await Promise.all([updateDKPSheet(), updatePPPSheet(), updateTallySheet()]);
-        console.log('Updated sheets');
         setTimeout(updateSheets, 1000 * 15);
     }
 
@@ -206,12 +205,14 @@ const { google } = require('googleapis');
     let userList;
     async function updateUsers() {
         let { data, error } = await supabase.from(config.supabase.tables.users).select('id::text, username, dkp, ppp, frozen');
-        if (error == null) userList = data;
+        if (error == null) {
+            userList = data;
+            console.log(`[User List]: Fetched ${userList.length} users.`);
+        }
         else {
             // console.log('Error fetching user list:', error.message);
             await new Promise(res => setTimeout(res, 1000));
         }
-        console.log('Updated user list');
         
         if (tallySheet != null && mismatchChannel != null) {
             let members = userList.filter(a => tallySheet.find(b => b[0] == a.username) == null).sort((a, b) => a.username > b.username ? 1 : -1);
@@ -225,15 +226,19 @@ const { google } = require('googleapis');
             })
             embeds.forEach(async (a, i) => {
                 a.data.description += '```';
-                if (messages[i] == null) await mismatchChannel.send({ embeds: [a] });
-                else await messages[i].edit({ embeds: [a] });
+                try {
+                    if (messages[i] == null) await mismatchChannel.send({ embeds: [a] });
+                    else await messages[i].edit({ embeds: [a] });
+                } catch (err) {
+                    console.log(`[Mismatch List]: Error updating message:`, err);
+                }
             });
             for (let message of messages.slice(embeds.length)) await message.delete();
             
-            console.log('Updated mismatch list');
+            console.log(`[Mismatch List]: Found ${members.length} mismatched users.`);
         }
 
-        setTimeout(updateUsers, 1000);
+        setTimeout(updateUsers, 2000);
     }
     updateUsers();
 
@@ -259,7 +264,7 @@ const { google } = require('googleapis');
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
 
-        console.log('Updated unregistered list')
+        console.log(`[Unregistered List]: Found ${members.length} unregistered users.`)
 
         setTimeout(updateUnregistered, 1000 * 60 * 5);
     }
