@@ -339,6 +339,25 @@ const { google } = require('googleapis');
     }
 
     client.on(Events.InteractionCreate, async interaction => {
+        let user = await getUser(interaction.user.id);
+        if (!(interaction.isAutocomplete() || interaction.commandName == 'register')) {
+            if (user == null) {
+                let errorEmbed = new EmbedBuilder()
+                    .setColor('#ff0000')
+                    .addFields({ name: 'Error', value: 'User not found. Use /register to begin.' });
+                await interaction.reply({ embeds: [errorEmbed], components: [], ephemeral: true });
+                return;
+            }
+            if (user.error) {
+                console.log(error);
+                let errorEmbed = new EmbedBuilder()
+                    .setColor('#ff0000')
+                    .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
+                await interaction.editReply({ embeds: [errorEmbed], components: [], ephemeral: true });
+                return;
+            }
+        }
+
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);
             if (!command) return;
@@ -354,24 +373,6 @@ const { google } = require('googleapis');
                 return;
             }
             
-            let user = await getUser(interaction.user.id);
-            if (command.data.name != 'register') {
-                if (user == null) {
-                    let errorEmbed = new EmbedBuilder()
-                        .setColor('#ff0000')
-                        .addFields({ name: 'Error', value: 'User not found. Use /register to begin.' });
-                    await interaction.editReply({ embeds: [errorEmbed], components: [] });
-                    return;
-                }
-                if (user.error) {
-                    console.log(error);
-                    let errorEmbed = new EmbedBuilder()
-                        .setColor('#ff0000')
-                        .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
-                    await interaction.editReply({ embeds: [errorEmbed], components: [] });
-                    return;
-                }
-            }
             if (user != null) {
                 user.staff = false;
                 for (const role of config.discord.staffRoles) if (guildMember.roles.cache.get(role)) user.staff = true;
@@ -404,14 +405,10 @@ const { google } = require('googleapis');
             }
         }
         if (interaction.isButton()) {
-            let user = await getUser(interaction.user.id);
-
             const command = client.commands.get(interaction.customId.split('-')[0]);
             if (command?.buttonHandler) command.buttonHandler(interaction, user, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, itemList);
         }
         if (interaction.isAnySelectMenu()) {
-            let user = await getUser(interaction.user.id);
-
             const command = client.commands.get(interaction.customId.split('-')[0]);
             if (command?.selectHandler) command.selectHandler(interaction, user, auctions);
         }
@@ -421,17 +418,6 @@ const { google } = require('googleapis');
                 console.log(`Unknown command "${interaction.customId.split('-')[0]}"`);
                 return;
             }
-
-            let user = await getUser(interaction.user.id);
-            if (user.error) {
-                console.log(error);
-                let errorEmbed = new EmbedBuilder()
-                    .setColor('#ff0000')
-                    .addFields({ name: 'Error', value: `Error fetching user data: ${error.message}` });
-                await interaction.editReply({ embeds: [errorEmbed], components: [] });
-                return;
-            }
-
             if (command?.modalHandler) command.modalHandler(interaction, user, supabase, auctions);
         }
     });
