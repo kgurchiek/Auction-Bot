@@ -410,11 +410,33 @@ const { google } = require('googleapis');
         }
         if (interaction.isButton()) {
             const command = client.commands.get(interaction.customId.split('-')[0]);
-            if (command?.buttonHandler) command.buttonHandler(interaction, user, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, itemList);
+            try {
+                if (command?.buttonHandler) command.buttonHandler(interaction, user, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, itemList);
+            } catch (error) {
+                console.log(error);
+                var errorEmbed = new EmbedBuilder()
+                    .setColor('#ff0000')
+                    .setTitle('Error Executing Command')
+                    .setDescription(String(error.message))
+                try {
+                    await interaction.editReply({ embeds: [errorEmbed], components: [] })
+                } catch (e) {}
+            }
         }
         if (interaction.isAnySelectMenu()) {
             const command = client.commands.get(interaction.customId.split('-')[0]);
-            if (command?.selectHandler) command.selectHandler(interaction, user, auctions);
+            try {
+                if (command?.selectHandler) command.selectHandler(interaction, user, auctions);
+            } catch (error) {
+                console.log(error);
+                var errorEmbed = new EmbedBuilder()
+                    .setColor('#ff0000')
+                    .setTitle('Error Executing Command')
+                    .setDescription(String(error.message))
+                try {
+                    await interaction.editReply({ embeds: [errorEmbed], components: [] })
+                } catch (e) {}
+            }
         }
         if (interaction.isModalSubmit()) {
             const command = client.commands.get(interaction.customId.split('-')[0]);
@@ -422,7 +444,18 @@ const { google } = require('googleapis');
                 console.log(`Unknown command "${interaction.customId.split('-')[0]}"`);
                 return;
             }
-            if (command?.modalHandler) command.modalHandler(interaction, user, supabase, auctions);
+            try {
+                if (command?.modalHandler) command.modalHandler(interaction, user, supabase, auctions);
+            } catch (error) {
+                console.log(error);
+                var errorEmbed = new EmbedBuilder()
+                    .setColor('#ff0000')
+                    .setTitle('Error Executing Command')
+                    .setDescription(String(error.message))
+                try {
+                    await interaction.editReply({ embeds: [errorEmbed], components: [] })
+                } catch (e) {}
+            }
         }
     });
 
