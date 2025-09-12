@@ -53,14 +53,18 @@ module.exports = {
                     let newEmbed = auctions[monster].DKP.embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     newEmbed.title = `Auction for ${monster} (Closed)`;
-                    newEmbed.footer = { text: `Closed by ${author.username}` };
+                    let minutes = Math.floor((Date.now() - new Date(newEmbed.timestamp).getTime()) / 60000);
+                    newEmbed.footer = { text: `Closed by ${author.username}, lasted ${minutes} minute${minutes == 1 ? '' : 's'}` };
+                    newEmbed.timestamp = new Date().toISOString();
                     await auctions[monster].DKP.message.edit({ embeds: [newEmbed], components: [] });
                 }
                 if (auctions[monster].PPP) {
                     let newEmbed = auctions[monster].PPP.embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     newEmbed.title = `Auction for ${monster} (Closed)`;
-                    newEmbed.footer = { text: `Closed by ${author.username}` };
+                    let minutes = Math.floor((Date.now() - new Date(newEmbed.timestamp).getTime()) / 60000);
+                    newEmbed.footer = { text: `Closed by ${author.username}, lasted ${minutes} minute${minutes == 1 ? '' : 's'}` };
+                    newEmbed.timestamp = new Date().toISOString();
                     await auctions[monster].PPP.message.edit({ embeds: [newEmbed], components: [] });
                 }
                 delete auctions[monster];
@@ -162,6 +166,9 @@ module.exports = {
 
             if (auctions[auction.item.name]?.[auction.item.type]) {
                 auction.bids.sort((a, b) => b.amount - a.amount);
+                let oldEmbed = auctions[auction.item.name][auction.item.type].embed;
+                if (oldEmbed.data) oldEmbed = oldEmbed.data;
+                let minutes = Math.floor((Date.now() - new Date(oldEmbed.timestamp).getTime()) / 60000);
                 const logEmbed = new EmbedBuilder()
                     .setColor('#00ff00')
                     .setTitle(`Auction for ${auction.item.name} (Closed)`)
@@ -172,8 +179,8 @@ module.exports = {
                         { name: 'Next Bid', value: auction.bids.length == 0 ? `${config.auction[auction.item.type].min} ${auction.item.type}` : `${Math.round((auction.bids[0].amount + config.auction[auction.item.type].raise) * 10) / 10} ${auction.item.type}` },
                         { name: 'Bids', value: `\`\`\`${auction.bids.length == 0 ? '​' : auction.bids.slice(0, 15).map(a => `${a.user}: ${a.amount} ${auction.item.type}`).join('\n')}${auction.bids.length > 10 ? '\n...' : ''}\`\`\`` }
                     )
-                    .setFooter({ text: `Closed by ${author.username}` })
-                    .setTimestamp();
+                    .setFooter({ text: `Closed by ${author.username}, lasted ${minutes} minute${minutes == 1 ? '' : 's'}` })
+                    .setTimestamp(new Date());
                 await auctions[auction.item.name][auction.item.type].message.edit({ embeds: [logEmbed], components: [] });
                 delete auctions[auction.item.name];
             }
@@ -186,16 +193,20 @@ module.exports = {
                 let newEmbed = auctions[monster].DKP.embed;
                 if (newEmbed.data) newEmbed = newEmbed.data;
                 newEmbed.title = `Auction for ${monster} (Closed)`;
-                newEmbed.footer = { text: `Closed by ${author.username}` };
+                let minutes = Math.floor((Date.now() - new Date(newEmbed.timestamp).getTime()) / 60000);
+                newEmbed.footer = { text: `Closed by ${author.username}, lasted ${minutes} minute${minutes == 1 ? '' : 's'}` };
                 for (let field of newEmbed.fields) if (field.name.endsWith('(Closed)')) field.name = field.name.slice(0, -9);
+                newEmbed.timestamp = new Date().toISOString();
                 await auctions[monster].DKP.message.edit({ embeds: [newEmbed], components: [] });
             }
             if (auctions[monster].PPP) {
                 let newEmbed = auctions[monster].PPP.embed;
                 if (newEmbed.data) newEmbed = newEmbed.data;
                 newEmbed.title = `Auction for ${monster} (Closed)`;
-                newEmbed.footer = { text: `Closed by ${author.username}` };
+                let minutes = Math.floor((Date.now() - new Date(newEmbed.timestamp).getTime()) / 60000);
+                newEmbed.footer = { text: `Closed by ${author.username}, lasted ${minutes} minute${minutes == 1 ? '' : 's'}` };
                 for (let field of newEmbed.fields) if (field.name.endsWith('(Closed)')) field.name = field.name.slice(0, -9);
+                newEmbed.timestamp = new Date().toISOString();
                 await auctions[monster].PPP.message.edit({ embeds: [newEmbed], components: [] });
             }
             delete auctions[monster];
