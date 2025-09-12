@@ -9,9 +9,8 @@ const blockBid = (item, callback) => blockedBids.push({ item, callback });
 const unblockBid = (item) => blockedBids = blockedBids.filter(a => a.item != item);
 const handleQueue = async () => {
     for (let bid of blockedBids) if (bidQueue.find(a => a.item == bid.item) == null) bid.callback();
-    for (const bid of bidQueue) await bid.func();
-    bidQueue.length = 0;
-    setTimeout(handleQueue, 0);
+    while (bidQueue.length > 0) await bidQueue.splice(0, 1)[0].func();
+    setTimeout(handleQueue);
 }
 handleQueue();
 
