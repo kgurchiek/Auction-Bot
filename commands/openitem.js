@@ -55,6 +55,8 @@ module.exports = {
             await interaction.editReply({ embeds: [errorEmbed] });
             return;
         }
+        
+        client.commands.get('bid').unblockBid(item.name);
         ({ error } = await supabase.from(config.supabase.tables.auctions).insert({ item: item.name, host: author.username }));
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Creating Auction', error.message)] });
         const newEmbed = new EmbedBuilder()

@@ -19,7 +19,7 @@ module.exports = {
         await interaction.respond(monsters.sort((a, b) => a > b ? 1 : -1).map(a => ({ name: a, value: a })).slice(0, 25));
     },
     ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel) {
+    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, updateSheets, itemList, auctionSheet) {
         const monster = interaction.options.getString('monster');
         
         let { data: items, error } = await supabase.from(config.supabase.tables.items).select('*').eq('monster', monster);
@@ -83,6 +83,7 @@ module.exports = {
 
         if (opened.length == 0) return;
         let auction;
+        for (let item of itemList) if (item.monster == monster) client.commands.get('bid').unblockBid(item.name);
         ({ data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('item!inner(name, monster), bids').eq('item.monster', monster).eq('open', true));
         if (error) return await interaction.editReply({ content: '', embeds: [newEmbed, errorEmbed('Error Fetching Auctions', error.message)] });
 

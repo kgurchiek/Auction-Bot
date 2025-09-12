@@ -411,7 +411,7 @@ const { google } = require('googleapis');
         if (interaction.isButton()) {
             const command = client.commands.get(interaction.customId.split('-')[0]);
             try {
-                if (command?.buttonHandler) command.buttonHandler(interaction, user, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, itemList);
+                if (command?.buttonHandler) command.buttonHandler(interaction, user, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, itemList, client);
             } catch (error) {
                 console.log(error);
                 var errorEmbed = new EmbedBuilder()

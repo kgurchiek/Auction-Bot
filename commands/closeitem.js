@@ -10,7 +10,7 @@ module.exports = {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase()) && auctions[a.item.monster] == null).map(a => ({ name: a.item.name, value: a.item.name })).sort((a, b) => a.name > b.name ? 1 : -1).slice(0, 25));
     },
-    async buttonHandler(interaction, author, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets) {
+    async buttonHandler(interaction, author, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, itemList, client) {
         let item = interaction.customId.split('-')[1];
         let confirmed = interaction.customId.split('-')[2] == 'true';
         if (!confirmed) {
@@ -30,6 +30,8 @@ module.exports = {
         }
         interaction.message.components[0].components[0].data.disabled = true;
         await interaction.update({ components: interaction.message.components });
+
+        await new Promise(res => client.commands.get('bid').blockBid(item, res));
 
         let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item (name, type, monster), start').eq('item', item).eq('open', true).limit(1);
         if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
@@ -105,6 +107,8 @@ module.exports = {
             price: winner?.amount,
             closer: author.username
         }).eq('item', auction.item.name).eq('open', true));
+        if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
+
         if (auction.bids.length > 0) {
             if (config.google[auction.item.type].log != '') {
                 await googleSheets.spreadsheets.values.append({
@@ -125,8 +129,6 @@ module.exports = {
                 });
             }
         }
-
-        if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
 
         if (auctions[item]?.[auction.item.type]) {
             auction.bids.sort((a, b) => b.amount - a.amount);
