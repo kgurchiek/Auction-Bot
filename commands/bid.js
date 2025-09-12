@@ -8,7 +8,6 @@ let blockedBids = [];
 const blockBid = (item, callback) => blockedBids.push({ item, callback });
 const unblockBid = (item) => blockedBids = blockedBids.filter(a => a.item != item);
 const handleQueue = async () => {
-    console.log({blockedBids})
     for (let bid of blockedBids) if (bidQueue.find(a => a.item == bid.item) == null) bid.callback();
     for (const bid of bidQueue) await bid.func();
     bidQueue.length = 0;
