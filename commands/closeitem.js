@@ -33,7 +33,7 @@ module.exports = {
 
         await new Promise(res => client.commands.get('bid').blockBid(item, res));
 
-        let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item (name, type, monster), start').eq('item', item).eq('open', true).limit(1);
+        let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item (name, type, monster), start').eq('item', item).eq('open', true).limit(1);
         if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
         auction = auction[0];
 
@@ -111,6 +111,16 @@ module.exports = {
             closer: author.username
         }).eq('item', auction.item.name).eq('open', true));
         if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
+        
+        if (winner) {
+            ({ error } = await supabase.from(config.supabase.tables[auction.item.type].lootHistory).insert({
+                user: winner.user,
+                item: auction.item.name,
+                points_spent: winner.amount,
+                auction: auction.id
+            }));
+            if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Updating Loot History', error.message)] });
+        }
 
         if (auction.bids.length > 0) {
             if (config.google[auction.item.type].log != '') {

@@ -5,7 +5,13 @@
         "tables": {
             "users": "users",
             "items": "items",
-            "auctions": "auctions"
+            "auctions": "auctions",
+            "DKP": {
+                "lootHistory": "loot_history_dkp"
+            },
+            "PPP": {
+                "lootHistory": "loot_history_ppp"
+            }
         }
     },
     "discord": {

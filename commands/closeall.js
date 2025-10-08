@@ -120,6 +120,18 @@ module.exports = {
                 price: winner?.amount,
                 closer: author.username
             }).eq('item', auction.item.name).eq('open', true));
+            if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
+
+            if (winner) {
+                ({ error } = await supabase.from(config.supabase.tables[auction.item.type].lootHistory).insert({
+                    user: winner.user,
+                    item: auction.item.name,
+                    points_spent: winner.amount,
+                    auction: auction.id
+                }));
+                if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Updating Loot History', error.message)] });
+            }
+
             if (auction.bids.length > 0) {
                 if (config.google[auction.item.type].log != '') {
                     await googleSheets.spreadsheets.values.append({
@@ -141,7 +153,6 @@ module.exports = {
                 }
             }
 
-            if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
             let newEmbed;
             if (auction.bids.length == 0) {
                 newEmbed = new EmbedBuilder()

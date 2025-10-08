@@ -122,6 +122,18 @@ module.exports = {
                 price: winner?.amount,
                 closer: author.username
             }).eq('item', auction.item.name).eq('open', true));
+            if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
+
+            if (winner) {
+                ({ error } = await supabase.from(config.supabase.tables[auction.item.type].lootHistory).insert({
+                    user: winner.user,
+                    item: auction.item.name,
+                    points_spent: winner.amount,
+                    auction: auction.id
+                }));
+                if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Updating Loot History', error.message)] });
+            }
+
             if (auction.bids.length > 0) {
                 if (config.google[auction.item.type].log != '') {
                     await googleSheets.spreadsheets.values.append({
@@ -143,26 +155,25 @@ module.exports = {
                 }
             }
 
-            if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Closing Auction', error.message)] });
-            let newEmbed;
-            if (auction.bids.length == 0) {
-                newEmbed = new EmbedBuilder()
-                    .setColor('#00ff00')
-                    .setTitle(`Auction Closed for ${auction.item.name}`)
-                    .setDescription(`Bidding has been closed for **${monster}**.\nNo bids were placed.`)
-            } else if (auction.item.type == 'DKP') {
-                let winners = auction.bids.sort((a, b) => b.amount - a.amount).filter(a => a.amount === auction.bids[0].amount);
-                newEmbed = new EmbedBuilder()
-                    .setColor('#00ff00')
-                    .setTitle(`Auction Closed for ${auction.item.name}`)
-                    .setDescription(`Bidding has been closed for **${monster}**.\nWinners (${winners[0].amount} ${auction.item.type}): ${winners.map(a => a.user).join(', ')}`)
-            } else {
-                winner = auction.bids.sort((a, b) => b.amount - a.amount)[0];
-                newEmbed = new EmbedBuilder()
-                    .setColor('#00ff00')
-                    .setTitle(`Auction Closed for ${auction.item.name}`)
-                    .setDescription(`Bidding has been closed for **${monster}**.\nWinner: ${winner.user} (${winner.amount} ${auction.item.type})`)
-            }
+            // let newEmbed;
+            // if (auction.bids.length == 0) {
+            //     newEmbed = new EmbedBuilder()
+            //         .setColor('#00ff00')
+            //         .setTitle(`Auction Closed for ${auction.item.name}`)
+            //         .setDescription(`Bidding has been closed for **${monster}**.\nNo bids were placed.`)
+            // } else if (auction.item.type == 'DKP') {
+            //     let winners = auction.bids.sort((a, b) => b.amount - a.amount).filter(a => a.amount === auction.bids[0].amount);
+            //     newEmbed = new EmbedBuilder()
+            //         .setColor('#00ff00')
+            //         .setTitle(`Auction Closed for ${auction.item.name}`)
+            //         .setDescription(`Bidding has been closed for **${monster}**.\nWinners (${winners[0].amount} ${auction.item.type}): ${winners.map(a => a.user).join(', ')}`)
+            // } else {
+            //     winner = auction.bids.sort((a, b) => b.amount - a.amount)[0];
+            //     newEmbed = new EmbedBuilder()
+            //         .setColor('#00ff00')
+            //         .setTitle(`Auction Closed for ${auction.item.name}`)
+            //         .setDescription(`Bidding has been closed for **${monster}**.\nWinner: ${winner.user} (${winner.amount} ${auction.item.type})`)
+            // }
             // await interaction.followUp({ embeds: [newEmbed] });
             // embeds.push(newEmbed);
 
