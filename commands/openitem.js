@@ -34,11 +34,11 @@ module.exports = {
             return;
         }
 
-        if (item.type == 'DKP' && author.frozen) {
+        if (author.frozen) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
                 .setTitle('Account Frozen')
-                .setDescription('Your account is frozen. You cannot manage auctions or place bids on DKP items this time.');
+                .setDescription('Your account is frozen. You cannot manage auctions or place bids on items this time.');
             await interaction.editReply({ embeds: [errorEmbed] });
             return;
         }

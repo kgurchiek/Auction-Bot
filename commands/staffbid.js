@@ -76,11 +76,11 @@ module.exports = {
                 return;
             }
 
-            if (auction.item.type == 'DKP' && user.frozen) {
+            if (user.frozen) {
                 const errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
                     .setTitle('Account Frozen')
-                    .setDescription(`<@${user.id}>'s account is frozen. They cannot place bids on DKP items this time.`);
+                    .setDescription(`<@${user.id}>'s account is frozen. They cannot place bids on items this time.`);
                 await interaction.editReply({ embeds: [errorEmbed] });
                 return;
             }
