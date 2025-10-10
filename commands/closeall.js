@@ -38,7 +38,7 @@ module.exports = {
         interaction.message.components[0].components[0].data.disabled = true;
         await interaction.update({ components: interaction.message.components });
 
-        let { data: auctionList, error } = await supabase.from(config.supabase.tables.auctions).select('bids, item!inner(name, type, monster), start').eq('item.monster', monster).eq('open', true);
+        let { data: auctionList, error } = await supabase.from(config.supabase.tables.auctions).select('id, bids, item!inner(name, type, monster), start').eq('item.monster', monster).eq('open', true);
         if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Fetching Monster', error.message)] });
 
         if (auctionList.length == 0) {
