@@ -200,31 +200,20 @@ module.exports = {
         }
 
         if (auctionList.length > 0 && auctions[monster]) {
-            if (closed.length == auctionList.length) {
-                if (auctions[monster].DKP) {
-                    let newEmbed = auctions[monster].DKP.embed;
+            let types = ['DKP', 'PPP'].filter(a => auctions[monster][a] != null);
+            for (let type of types) {
+                if (closed.filter(a => a.item.type == type).length == auctionList.filter(a => a.item.type == type).length) {
+                    let newEmbed = auctions[monster][type].embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
                     newEmbed.title = `Auction for ${monster} (Closed)`;
                     let minutes = Math.floor((Date.now() - new Date(newEmbed.timestamp).getTime()) / 60000);
                     newEmbed.footer = { text: `Closed by ${author.username}, lasted ${minutes} minute${minutes == 1 ? '' : 's'}` };
                     newEmbed.timestamp = new Date().toISOString();
-                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed], components: [] });
-                }
-                if (auctions[monster].PPP) {
-                    let newEmbed = auctions[monster].PPP.embed;
+                    await auctions[monster][type].message.edit({ embeds: [newEmbed], components: [] });
+                } else {
+                    let newEmbed = auctions[monster][type].embed;
                     if (newEmbed.data) newEmbed = newEmbed.data;
-                    newEmbed.title = `Auction for ${monster} (Closed)`;
-                    let minutes = Math.floor((Date.now() - new Date(newEmbed.timestamp).getTime()) / 60000);
-                    newEmbed.footer = { text: `Closed by ${author.username}, lasted ${minutes} minute${minutes == 1 ? '' : 's'}` };
-                    newEmbed.timestamp = new Date().toISOString();
-                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed], components: [] });
-                }
-                delete auctions[monster];
-            } else {
-                if (auctions[monster].DKP) {
-                    let newEmbed = auctions[monster].DKP.embed;
-                    if (newEmbed.data) newEmbed = newEmbed.data;
-                    let newButtons = auctions[monster].DKP.buttons;
+                    let newButtons = auctions[monster][type].buttons;
                     newButtons[0].components[0].options = newButtons[0].components[0].options.filter(a => (a.data || a).value.split('-')[1] == 'true');
                     newButtons[1].components = newButtons[1].components.filter(a => (a.data || a).custom_id.split('-')[0] != 'closemonster');
                     for (let field of newEmbed.fields) {
@@ -233,25 +222,9 @@ module.exports = {
                         if (item == null || item.tradeable) continue;
                         field.name = `${field.name} (Closed)`;
                     }
-                    auctions[monster].DKP.embed = newEmbed;
-                    auctions[monster].DKP.buttons = newButtons;
-                    await auctions[monster].DKP.message.edit({ embeds: [newEmbed], components: newButtons });
-                }
-                if (auctions[monster].PPP) {
-                    let newEmbed = auctions[monster].PPP.embed;
-                    if (newEmbed.data) newEmbed = newEmbed.data;
-                    let newButtons = auctions[monster].PPP.buttons;
-                    newButtons[0].components[0].options = newButtons[0].components[0].options.filter(a => (a.data || a).value.split('-')[1] == 'true');
-                    newButtons[1].components = newButtons[1].components.filter(a => (a.data || a).custom_id.split('-')[0] != 'closemonster');
-                    for (let field of newEmbed.fields) {
-                        if (field.name.endsWith('(Closed)')) continue;
-                        let item = itemList.find(a => field.name.startsWith(`${a.tradeable ? '💰 ' : ''}**[${a.name}]**`));
-                        if (item == null || item.tradeable) continue;
-                        field.name = `${field.name} (Closed)`;
-                    }
-                    auctions[monster].PPP.embed = newEmbed;
-                    auctions[monster].PPP.buttons = newButtons;
-                    await auctions[monster].PPP.message.edit({ embeds: [newEmbed], components: newButtons });
+                    auctions[monster][type].embed = newEmbed;
+                    auctions[monster][type].buttons = newButtons;
+                    await auctions[monster][type].message.edit({ embeds: [newEmbed], components: newButtons });
                 }
             }
         }
