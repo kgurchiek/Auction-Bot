@@ -14,12 +14,12 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
+    async autocomplete(interaction, client, supabase, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(itemList.filter(a => a.name.toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: a.name, value: a.name })).slice(0, 25));
     },
     ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel) {
+    async execute(interaction, client, author, supabase, auctions, dkpChannel, pppChannel) {
         let itemName = interaction.options.getString('item');
         let { data: item, error } = await supabase.from(config.supabase.tables.items).select('*').eq('name', itemName).eq('available', true).limit(1);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Item', error.message)] });

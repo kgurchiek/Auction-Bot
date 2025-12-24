@@ -31,12 +31,12 @@ module.exports = {
             .setRequired(true)
             .setMinValue(0)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
+    async autocomplete(interaction, client, supabase, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: `${a.item.name} (${a.item.wipe ? 'Wipe,' : (a.bids[a.bids.length - 1]?.amount + config.auction[a.item.type].raise) || config.auction[a.item.type].min} ${a.item.type})`, value: a.item.name })).slice(0, 25));
     },
     ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
+    async execute(interaction, client, author, supabase, auctions) {
         bidQueue.push(async () => {
             if (!author.staff) {
                 const errorEmbed = new EmbedBuilder()

@@ -7,10 +7,12 @@
             "items": "items",
             "auctions": "auctions",
             "DKP": {
-                "lootHistory": "loot_history_dkp"
+                "lootHistory": "loot-history_dkp",
+                "ownedItems": ""
             },
             "PPP": {
-                "lootHistory": "loot_history_ppp"
+                "lootHistory": "loot_history_ppp",
+                "ownedItems": ""
             }
         }
     },
@@ -23,12 +25,7 @@
         "dkpChannel": "",
         "pppChannel": "",
         "rollChannel": "",
-        "leaderboard": {
-            "DKP": "",
-            "PPP": ""
-        },
-        "unregistered": "",
-        "mismatch": ""
+        "unregistered": ""
     },
     "auction": {
         "DKP": {
@@ -42,35 +39,6 @@
             "increment": 0.1,
             "raise": 1,
             "winRaise": 0.1
-        }
-    },
-    "google": {
-        "credentials": {
-            "type": "",
-            "project_id": "",
-            "private_key_id": "",
-            "private_key": "",
-            "client_email": "",
-            "client_id": "",
-            "auth_uri": "",
-            "token_uri": "",
-            "auth_provider_x509_cert_url": "",
-            "client_x509_cert_url": "",
-            "universe_domain": ""
-        },
-        "DKP": {
-            "id": "",
-            "sheet": "",
-            "log": ""
-        },
-        "PPP": {
-            "id": "",
-            "sheet": "",
-            "log": ""
-        },
-        "tally": {
-            "id": "",
-            "sheet": ""
         }
     }
 }

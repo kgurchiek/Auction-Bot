@@ -160,7 +160,9 @@ module.exports = {
                     amount = author[auction.item.type.toLowerCase()];
                 }
 
-                let { increment, raise, winRaise } = config.auction[auction.item.type];
+                let { min, increment, raise, winRaise } = config.auction[auction.item.type];
+                min = auction.bids[auction.bids.length - 1]?.amount || min - raise;
+                console.log(min)
                 if (Math.round((author[auction.item.type.toLowerCase()] - (auction.item.wipe ? 0 : cost)) / increment) * increment < amount) {
                     const errorEmbed = new EmbedBuilder()
                         .setColor('#ff0000')
@@ -180,16 +182,16 @@ module.exports = {
                     return;
                 }
                 
-                if (auction.bids.length > 0 && amount < Math.round((auction.bids[auction.bids.length - 1].amount + raise) * 10) / 10 && !(amount >= auction.bids[auction.bids.length - 1].amount + winRaise && amount == author[auction.item.type.toLowerCase()])) {
+                if (amount < Math.round((min + raise) * 10) / 10 && !(amount >= min + winRaise && amount == author[auction.item.type.toLowerCase()])) {
                     const errorEmbed = new EmbedBuilder()
                         .setColor('#ff0000')
                         .setTitle('Bid Too Low')
-                        .setDescription(`You must bid at least **${Math.round((auction.bids[auction.bids.length - 1].amount + raise) * 10) / 10} ${auction.item.type}** to outbid the current highest bidder.`);
+                        .setDescription(`You must bid at least **${Math.round((min + raise) * 10) / 10} ${auction.item.type}** to outbid the current highest bidder.`);
                     await interaction.editReply({ embeds: [errorEmbed] });
                     return;
                 }
 
-                if (auction.bids.length > 0 && amount == auction.bids[auction.bids.length - 1].amount && auction.item.tradeable) {
+                if (auction.bids.length > 0 && amount == min && auction.item.tradeable) {
                     const errorEmbed = new EmbedBuilder()
                         .setColor('#ff0000')
                         .setTitle('Bid Too Low')

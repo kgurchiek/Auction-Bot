@@ -25,13 +25,13 @@ module.exports = {
         option.setName('ppp')
             .setDescription('the user\'s PPP')
     ),
-    async autocomplete(interaction, client, users, pppSheet, dkpSheet, tallySheet) {
-        let usernames = tallySheet.map(a => a[0]);
+    async autocomplete(interaction, client, supabase, auctions, itemList, auctionList, userList) {
+        let usernames = userList.map(a => a.username);
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(usernames.filter(a => a.toLowerCase().includes(focusedValue.value.toLowerCase())).map(choice => ({ name: choice, value: choice })).slice(0, 25));
     },
     ephemeral: false,
-    async execute(interaction, client, author, supabase, pppSheet, dkpSheet, tallySheet) {
+    async execute(interaction, client, author, supabase) {
         if (!author.staff) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
@@ -64,7 +64,7 @@ module.exports = {
 
         let error;
         try {
-            let response = await supabase.from(config.supabase.tables.users).insert({ id: user.id, username: username, dkp: dkp || dkpSheet.find(a => a[0] == username)?.[2] || 0, ppp: ppp || pppSheet.find(a => a[0] == username)?.[2] || 0, frozen: false });
+            let response = await supabase.from(config.supabase.tables.users).insert({ id: user.id, username: username, dkp: dkp || 0, ppp: ppp || 0, frozen: false });
             
             if (response.error) error = response.error;
             else {

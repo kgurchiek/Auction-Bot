@@ -12,12 +12,12 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
         ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
+    async autocomplete(interaction, client, supabase, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(userList.filter(a => a.username.toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: a.username, value: a.username })).slice(0, 25));
     },
     ephemeral: false,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
+    async execute(interaction, client, author, supabase, auctions) {
         const username = interaction.options.getString('username');
 
         if (!author.staff) {

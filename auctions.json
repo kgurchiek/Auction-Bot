@@ -1,1 +1,849 @@
-{}
+{
+  "Behemoth": {
+    "DKP": {
+      "embed": {
+        "color": 65280,
+        "title": "Auction for Behemoth (Open)",
+        "description": "### Opened <t:1753119446:R>",
+        "author": {
+          "name": "Heirloom's Auction Bot",
+          "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png"
+        },
+        "thumbnail": {
+          "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//Behemoth.png"
+        },
+        "footer": {
+          "text": "Opened by Acidace (Diamondice)"
+        },
+        "timestamp": "2025-07-21T17:37:26.673Z",
+        "fields": [
+          {
+            "name": "**[Behemoth Tongue (Behe)]** __*No Bids*__",
+            "value": "​"
+          },
+          {
+            "name": "​\n——————————————————————————",
+            "value": "​"
+          },
+          {
+            "name": "💰 **[Behemoth Hide 1 (behe)]** __*No Bids*__",
+            "value": "​"
+          },
+          {
+            "name": "💰 **[Behemoth Hide 2 (behe)]** __*No Bids*__",
+            "value": "​"
+          }
+        ]
+      },
+      "buttons": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 3,
+              "custom_id": "bid",
+              "placeholder": "Select an item",
+              "options": [
+                {
+                  "label": "Behemoth Tongue (Behe)",
+                  "value": "Behemoth Tongue (Behe)-false"
+                },
+                {
+                  "label": "Behemoth Hide 1 (behe)",
+                  "value": "Behemoth Hide 1 (behe)-true"
+                },
+                {
+                  "label": "Behemoth Hide 2 (behe)",
+                  "value": "Behemoth Hide 2 (behe)-true"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 2,
+              "custom_id": "closemonster-Behemoth-false",
+              "label": "Close Rare/Ex",
+              "style": 1
+            },
+            {
+              "type": 2,
+              "custom_id": "closeall-Behemoth-false",
+              "label": "Close Everything",
+              "style": 4
+            }
+          ]
+        }
+      ],
+      "message": {
+        "channelId": "1378038434375012412",
+        "guildId": "1376780666695585842",
+        "id": "1396908949013528669",
+        "createdTimestamp": 1753119446758,
+        "type": 0,
+        "system": false,
+        "content": "",
+        "authorId": "1374727211571220580",
+        "pinned": false,
+        "tts": false,
+        "nonce": null,
+        "embeds": [
+          {
+            "type": "rich",
+            "title": "Auction for Behemoth (Open)",
+            "description": "### Opened <t:1753119446:R>",
+            "color": 65280,
+            "timestamp": "2025-07-21T17:37:26.673000+00:00",
+            "fields": [
+              {
+                "name": "**[Behemoth Tongue (Behe)]** __*No Bids*__",
+                "value": "​",
+                "inline": false
+              },
+              {
+                "name": "​\n——————————————————————————",
+                "value": "​",
+                "inline": false
+              },
+              {
+                "name": "💰 **[Behemoth Hide 1 (behe)]** __*No Bids*__",
+                "value": "​",
+                "inline": false
+              },
+              {
+                "name": "💰 **[Behemoth Hide 2 (behe)]** __*No Bids*__",
+                "value": "​",
+                "inline": false
+              }
+            ],
+            "author": {
+              "name": "Heirloom's Auction Bot",
+              "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png",
+              "proxy_icon_url": "https://images-ext-1.discordapp.net/external/lqtqcHFDyj7lO5bPpxT_5IIF3q3cktybxfpEAEwg5zQ/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/profile.png"
+            },
+            "thumbnail": {
+              "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//Behemoth.png",
+              "proxy_url": "https://images-ext-1.discordapp.net/external/K7uLstEa5qZlqWRh-3u_M8AxQqxz0FGk8XP5yFlswC8/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/Behemoth.png",
+              "width": 1439,
+              "height": 895,
+              "content_type": "image/png",
+              "placeholder": "0AcKBICWimeQd3eMh3poYLHABw==",
+              "placeholder_version": 1,
+              "flags": 0
+            },
+            "footer": {
+              "text": "Opened by Acidace (Diamondice)"
+            }
+          }
+        ],
+        "components": [
+          {
+            "type": 1,
+            "id": 1,
+            "components": [
+              {
+                "type": 3,
+                "id": 2,
+                "custom_id": "bid",
+                "placeholder": "Select an item",
+                "min_values": 1,
+                "max_values": 1,
+                "options": [
+                  {
+                    "label": "Behemoth Tongue (Behe)",
+                    "value": "Behemoth Tongue (Behe)-false"
+                  },
+                  {
+                    "label": "Behemoth Hide 1 (behe)",
+                    "value": "Behemoth Hide 1 (behe)-true"
+                  },
+                  {
+                    "label": "Behemoth Hide 2 (behe)",
+                    "value": "Behemoth Hide 2 (behe)-true"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "id": 3,
+            "components": [
+              {
+                "type": 2,
+                "id": 4,
+                "custom_id": "closemonster-Behemoth-false",
+                "style": 1,
+                "label": "Close Rare/Ex"
+              },
+              {
+                "type": 2,
+                "id": 5,
+                "custom_id": "closeall-Behemoth-false",
+                "style": 4,
+                "label": "Close Everything"
+              }
+            ]
+          }
+        ],
+        "attachments": [],
+        "stickers": [],
+        "position": null,
+        "roleSubscriptionData": null,
+        "resolved": null,
+        "editedTimestamp": 1753123488875,
+        "mentions": {
+          "everyone": false,
+          "users": [],
+          "roles": [],
+          "crosspostedChannels": [],
+          "repliedUser": null,
+          "members": [],
+          "channels": []
+        },
+        "webhookId": null,
+        "groupActivityApplicationId": null,
+        "applicationId": null,
+        "activity": null,
+        "flags": 0,
+        "reference": null,
+        "interactionMetadata": null,
+        "interaction": null,
+        "poll": null,
+        "messageSnapshots": [],
+        "call": null,
+        "cleanContent": ""
+      }
+    }
+  },
+  "Simurgh": {
+    "PPP": {
+      "embed": {
+        "color": 65280,
+        "title": "Auction for Simurgh (Open)",
+        "description": "### Opened <t:1753124210:R>",
+        "author": {
+          "name": "Heirloom's Auction Bot",
+          "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png"
+        },
+        "thumbnail": {
+          "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//Simurgh.png"
+        },
+        "footer": {
+          "text": "Opened by Mandok"
+        },
+        "timestamp": "2025-07-21T18:56:50.819Z",
+        "fields": [
+          {
+            "name": "💰 **[Damascus Ingot (Sim)]** __*No Bids*__",
+            "value": "​"
+          },
+          {
+            "name": "💰 **[Strider Boots]** __*No Bids*__",
+            "value": "​"
+          }
+        ]
+      },
+      "buttons": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 3,
+              "custom_id": "bid",
+              "placeholder": "Select an item",
+              "options": [
+                {
+                  "label": "Damascus Ingot (Sim)",
+                  "value": "Damascus Ingot (Sim)-true"
+                },
+                {
+                  "label": "Strider Boots",
+                  "value": "Strider Boots-true"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 2,
+              "custom_id": "closeall-Simurgh-false",
+              "label": "Close Everything",
+              "style": 4
+            }
+          ]
+        }
+      ],
+      "message": {
+        "channelId": "1377829137728667679",
+        "guildId": "1376780666695585842",
+        "id": "1396928931189231817",
+        "createdTimestamp": 1753124210880,
+        "type": 0,
+        "system": false,
+        "content": "",
+        "authorId": "1374727211571220580",
+        "pinned": false,
+        "tts": false,
+        "nonce": null,
+        "embeds": [
+          {
+            "type": "rich",
+            "title": "Auction for Simurgh (Open)",
+            "description": "### Opened <t:1753124210:R>",
+            "color": 65280,
+            "timestamp": "2025-07-21T18:56:50.819000+00:00",
+            "fields": [
+              {
+                "name": "💰 **[Damascus Ingot (Sim)]** __*No Bids*__",
+                "value": "​",
+                "inline": false
+              },
+              {
+                "name": "💰 **[Strider Boots]** __*No Bids*__",
+                "value": "​",
+                "inline": false
+              }
+            ],
+            "author": {
+              "name": "Heirloom's Auction Bot",
+              "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png",
+              "proxy_icon_url": "https://images-ext-1.discordapp.net/external/lqtqcHFDyj7lO5bPpxT_5IIF3q3cktybxfpEAEwg5zQ/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/profile.png"
+            },
+            "thumbnail": {
+              "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//Simurgh.png",
+              "proxy_url": "https://images-ext-1.discordapp.net/external/ntYQPJ3a6oWr1mNz7Ntx2Fo3s8jXur8y03v6owvn1hA/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/Simurgh.png",
+              "width": 508,
+              "height": 376,
+              "content_type": "image/png",
+              "placeholder": "jvcFFYBmh3eJioh3dweYd4dw5tP4",
+              "placeholder_version": 1,
+              "flags": 0
+            },
+            "footer": {
+              "text": "Opened by Mandok"
+            }
+          }
+        ],
+        "components": [
+          {
+            "type": 1,
+            "id": 1,
+            "components": [
+              {
+                "type": 3,
+                "id": 2,
+                "custom_id": "bid",
+                "placeholder": "Select an item",
+                "min_values": 1,
+                "max_values": 1,
+                "options": [
+                  {
+                    "label": "Damascus Ingot (Sim)",
+                    "value": "Damascus Ingot (Sim)-true"
+                  },
+                  {
+                    "label": "Strider Boots",
+                    "value": "Strider Boots-true"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "id": 3,
+            "components": [
+              {
+                "type": 2,
+                "id": 4,
+                "custom_id": "closeall-Simurgh-false",
+                "style": 4,
+                "label": "Close Everything"
+              }
+            ]
+          }
+        ],
+        "attachments": [],
+        "stickers": [],
+        "position": null,
+        "roleSubscriptionData": null,
+        "resolved": null,
+        "editedTimestamp": 1753128869278,
+        "mentions": {
+          "everyone": false,
+          "users": [],
+          "roles": [],
+          "crosspostedChannels": [],
+          "repliedUser": null,
+          "members": [],
+          "channels": []
+        },
+        "webhookId": null,
+        "groupActivityApplicationId": null,
+        "applicationId": null,
+        "activity": null,
+        "flags": 0,
+        "reference": null,
+        "interactionMetadata": null,
+        "interaction": null,
+        "poll": null,
+        "messageSnapshots": [],
+        "call": null,
+        "cleanContent": ""
+      }
+    }
+  },
+  "Ying Yang Robe": {
+    "PPP": {
+      "embed": {
+        "color": 65280,
+        "title": "Auction for Ying Yang Robe (Open)",
+        "description": "### Opened <t:1760496048:R>",
+        "author": {
+          "name": "Heirloom's Auction Bot",
+          "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png"
+        },
+        "thumbnail": {
+          "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//ShikigamiWeapon.png"
+        },
+        "fields": [
+          {
+            "name": "Next Bid",
+            "value": "1 PPP"
+          },
+          {
+            "name": "Bids",
+            "value": "```Aava: 0 PPP```"
+          }
+        ],
+        "footer": {
+          "text": "Opened by Aava"
+        },
+        "timestamp": "2025-10-15T02:40:59.616Z"
+      },
+      "buttons": {
+        "type": 1,
+        "components": [
+          {
+            "type": 2,
+            "custom_id": "bid-Ying Yang Robe",
+            "style": 1,
+            "label": "Bid"
+          },
+          {
+            "type": 2,
+            "custom_id": "closeitem-Ying Yang Robe-false",
+            "style": 4,
+            "label": "Close"
+          }
+        ]
+      },
+      "message": {
+        "channelId": "1377829137728667679",
+        "guildId": "1376780666695585842",
+        "id": "1427848661022277762",
+        "createdTimestamp": 1760496048933,
+        "type": 0,
+        "system": false,
+        "content": "",
+        "authorId": "1374727211571220580",
+        "pinned": false,
+        "tts": false,
+        "nonce": null,
+        "embeds": [
+          {
+            "type": "rich",
+            "title": "Auction for Ying Yang Robe (Open)",
+            "description": "### Opened <t:1760496048:R>",
+            "color": 65280,
+            "timestamp": "2025-10-15T02:40:59.616000+00:00",
+            "fields": [
+              {
+                "name": "Next Bid",
+                "value": "1 PPP",
+                "inline": false
+              },
+              {
+                "name": "Bids",
+                "value": "```Aava: 0 PPP```",
+                "inline": false
+              }
+            ],
+            "author": {
+              "name": "Heirloom's Auction Bot",
+              "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png",
+              "proxy_icon_url": "https://images-ext-1.discordapp.net/external/lqtqcHFDyj7lO5bPpxT_5IIF3q3cktybxfpEAEwg5zQ/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/profile.png"
+            },
+            "thumbnail": {
+              "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//ShikigamiWeapon.png",
+              "proxy_url": "https://images-ext-1.discordapp.net/external/mhI8PsGUPenjaeTpBLW_tj1NUboYP3qBp5KxpTYgmJE/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/ShikigamiWeapon.png",
+              "width": 0,
+              "height": 0,
+              "flags": 0
+            },
+            "footer": {
+              "text": "Opened by Aava"
+            }
+          }
+        ],
+        "components": [
+          {
+            "type": 1,
+            "id": 1,
+            "components": [
+              {
+                "type": 2,
+                "id": 2,
+                "custom_id": "bid-Ying Yang Robe",
+                "style": 1,
+                "label": "Bid"
+              },
+              {
+                "type": 2,
+                "id": 3,
+                "custom_id": "closeitem-Ying Yang Robe-false",
+                "style": 4,
+                "label": "Close"
+              }
+            ]
+          }
+        ],
+        "attachments": [],
+        "stickers": [],
+        "position": null,
+        "roleSubscriptionData": null,
+        "resolved": null,
+        "editedTimestamp": 1760496059553,
+        "mentions": {
+          "everyone": false,
+          "users": [],
+          "roles": [],
+          "crosspostedChannels": [],
+          "repliedUser": null,
+          "members": [],
+          "channels": []
+        },
+        "webhookId": null,
+        "groupActivityApplicationId": null,
+        "applicationId": null,
+        "activity": null,
+        "flags": 0,
+        "reference": null,
+        "interactionMetadata": null,
+        "interaction": null,
+        "poll": null,
+        "messageSnapshots": [],
+        "call": null,
+        "cleanContent": ""
+      }
+    }
+  },
+  "King Vinegarroon": {
+    "DKP": {
+      "embed": {
+        "color": 65280,
+        "title": "Auction for King Vinegarroon (Closed)",
+        "description": "### Opened <t:1761423244:R>",
+        "author": {
+          "name": "Heirloom's Auction Bot",
+          "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png"
+        },
+        "thumbnail": {
+          "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//KingVinegarroon.png"
+        },
+        "footer": {
+          "text": "Closed by Aava, lasted 0 minutes"
+        },
+        "timestamp": "2025-10-25T20:14:08.179Z",
+        "fields": [
+          {
+            "name": "**[Ace's Helm]** __*No Bids*__",
+            "value": "​"
+          },
+          {
+            "name": "​\n——————————————————————————",
+            "value": "​"
+          }
+        ]
+      },
+      "buttons": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 3,
+              "custom_id": "bid",
+              "placeholder": "Select an item",
+              "options": [
+                {
+                  "label": "Ace's Helm",
+                  "value": "Ace's Helm-false-DKP-King Vinegarroon"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 2,
+              "custom_id": "closeall-King Vinegarroon-false",
+              "label": "Close Everything",
+              "style": 4
+            }
+          ]
+        }
+      ],
+      "message": {
+        "channelId": "1378038434375012412",
+        "guildId": "1376780666695585842",
+        "id": "1431737659641954464",
+        "createdTimestamp": 1761423258458,
+        "type": 0,
+        "system": false,
+        "content": "",
+        "authorId": "1374727211571220580",
+        "pinned": false,
+        "tts": false,
+        "nonce": null,
+        "embeds": [
+          {
+            "type": "rich",
+            "title": "Auction for King Vinegarroon (Closed)",
+            "description": "### Opened <t:1761423244:R>",
+            "color": 65280,
+            "timestamp": "2025-10-25T20:14:08.179000+00:00",
+            "fields": [
+              {
+                "name": "**[Ace's Helm]** __*No Bids*__",
+                "value": "​",
+                "inline": false
+              },
+              {
+                "name": "​\n——————————————————————————",
+                "value": "​",
+                "inline": false
+              }
+            ],
+            "author": {
+              "name": "Heirloom's Auction Bot",
+              "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png",
+              "proxy_icon_url": "https://images-ext-1.discordapp.net/external/lqtqcHFDyj7lO5bPpxT_5IIF3q3cktybxfpEAEwg5zQ/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/profile.png"
+            },
+            "thumbnail": {
+              "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//KingVinegarroon.png",
+              "proxy_url": "https://images-ext-1.discordapp.net/external/Yp_xM6S7WHLmQnSVhqki5a_8GORIv_h2GyMRbtX3ulU/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/KingVinegarroon.png",
+              "width": 507,
+              "height": 539,
+              "content_type": "image/png",
+              "placeholder": "DQgGDwDX5eJgd4duZliXWYmKhQdIamAH",
+              "placeholder_version": 1,
+              "flags": 0
+            },
+            "footer": {
+              "text": "Closed by Aava, lasted 0 minutes"
+            }
+          }
+        ],
+        "components": [],
+        "attachments": [],
+        "stickers": [],
+        "position": null,
+        "roleSubscriptionData": null,
+        "resolved": null,
+        "editedTimestamp": 1761423262150,
+        "mentions": {
+          "everyone": false,
+          "users": [],
+          "roles": [],
+          "crosspostedChannels": [],
+          "repliedUser": null,
+          "members": [],
+          "channels": []
+        },
+        "webhookId": null,
+        "groupActivityApplicationId": null,
+        "applicationId": null,
+        "activity": null,
+        "flags": 0,
+        "reference": null,
+        "interactionMetadata": null,
+        "interaction": null,
+        "poll": null,
+        "messageSnapshots": [],
+        "call": null,
+        "cleanContent": ""
+      }
+    },
+    "PPP": {
+      "embed": {
+        "color": 65280,
+        "title": "Auction for King Vinegarroon (Open)",
+        "description": "### Opened <t:1761423244:R>",
+        "author": {
+          "name": "Heirloom's Auction Bot",
+          "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png"
+        },
+        "thumbnail": {
+          "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//KingVinegarroon.png"
+        },
+        "footer": {
+          "text": "Opened by Aava"
+        },
+        "timestamp": "2025-10-25T20:14:04.510Z",
+        "fields": [
+          {
+            "name": "💰 **[Venomous Claw (K.V)]** __*No Bids*__",
+            "value": "​"
+          }
+        ]
+      },
+      "buttons": [
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 3,
+              "custom_id": "bid",
+              "placeholder": "Select an item",
+              "options": [
+                {
+                  "label": "Venomous Claw (K.V)",
+                  "value": "Venomous Claw (K.V)-true-PPP-King Vinegarroon"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": 1,
+          "components": [
+            {
+              "type": 2,
+              "custom_id": "closeall-King Vinegarroon-false",
+              "label": "Close Everything",
+              "style": 4
+            }
+          ]
+        }
+      ],
+      "message": {
+        "channelId": "1377829137728667679",
+        "guildId": "1376780666695585842",
+        "id": "1431737660203860011",
+        "createdTimestamp": 1761423258592,
+        "type": 0,
+        "system": false,
+        "content": "",
+        "authorId": "1374727211571220580",
+        "pinned": false,
+        "tts": false,
+        "nonce": null,
+        "embeds": [
+          {
+            "type": "rich",
+            "title": "Auction for King Vinegarroon (Open)",
+            "description": "### Opened <t:1761423244:R>",
+            "color": 65280,
+            "timestamp": "2025-10-25T20:14:04.510000+00:00",
+            "fields": [
+              {
+                "name": "💰 **[Venomous Claw (K.V)]** __*No Bids*__",
+                "value": "​",
+                "inline": false
+              }
+            ],
+            "author": {
+              "name": "Heirloom's Auction Bot",
+              "icon_url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png",
+              "proxy_icon_url": "https://images-ext-1.discordapp.net/external/lqtqcHFDyj7lO5bPpxT_5IIF3q3cktybxfpEAEwg5zQ/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/profile.png"
+            },
+            "thumbnail": {
+              "url": "https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//KingVinegarroon.png",
+              "proxy_url": "https://images-ext-1.discordapp.net/external/Yp_xM6S7WHLmQnSVhqki5a_8GORIv_h2GyMRbtX3ulU/https/mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images/KingVinegarroon.png",
+              "width": 507,
+              "height": 539,
+              "content_type": "image/png",
+              "placeholder": "DQgGDwDX5eJgd4duZliXWYmKhQdIamAH",
+              "placeholder_version": 1,
+              "flags": 0
+            },
+            "footer": {
+              "text": "Opened by Aava"
+            }
+          }
+        ],
+        "components": [
+          {
+            "type": 1,
+            "id": 1,
+            "components": [
+              {
+                "type": 3,
+                "id": 2,
+                "custom_id": "bid",
+                "placeholder": "Select an item",
+                "min_values": 1,
+                "max_values": 1,
+                "options": [
+                  {
+                    "label": "Venomous Claw (K.V)",
+                    "value": "Venomous Claw (K.V)-true-PPP-King Vinegarroon"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": 1,
+            "id": 3,
+            "components": [
+              {
+                "type": 2,
+                "id": 4,
+                "custom_id": "closeall-King Vinegarroon-false",
+                "style": 4,
+                "label": "Close Everything"
+              }
+            ]
+          }
+        ],
+        "attachments": [],
+        "stickers": [],
+        "position": null,
+        "roleSubscriptionData": null,
+        "resolved": null,
+        "editedTimestamp": 1761423262299,
+        "mentions": {
+          "everyone": false,
+          "users": [],
+          "roles": [],
+          "crosspostedChannels": [],
+          "repliedUser": null,
+          "members": [],
+          "channels": []
+        },
+        "webhookId": null,
+        "groupActivityApplicationId": null,
+        "applicationId": null,
+        "activity": null,
+        "flags": 0,
+        "reference": null,
+        "interactionMetadata": null,
+        "interaction": null,
+        "poll": null,
+        "messageSnapshots": [],
+        "call": null,
+        "cleanContent": ""
+      }
+    }
+  }
+}

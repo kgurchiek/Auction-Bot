@@ -13,13 +13,13 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
+    async autocomplete(interaction, client, supabase, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
         let bidList = auctionList.reduce((a, b) => a.concat(b.bids.map(c => ({ item: b.item.name, type: b.item.type, user: c.user, amount: c.amount }))), []).filter((a, i, arr) => arr.find(b => b.item == a.item && b.user == a.user && b.amount > a.amount) == null);
         await interaction.respond(bidList.map(a => ({ name: `${a.user}: ${a.item} (${a.amount} ${a.type})`, value: `${a.item}:${a.user}` })).filter(a => a.name.toLowerCase().includes(focusedValue.value.toLowerCase())).sort((a, b) => a.name > b.name ? 1 : -1).slice(0, 25));
     },
     ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets) {
+    async execute(interaction, client, author, supabase, auctions) {
         let bid = interaction.options.getString('bid').split(':');
         let username = bid.splice(bid.length - 1);
         let item = bid.join(':');

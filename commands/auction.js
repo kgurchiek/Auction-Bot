@@ -12,12 +12,12 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
+    async autocomplete(interaction, client, supabase, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: a.item.name, value: a.item.name })).slice(0, 25));
     },
     ephemeral: false,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
+    async execute(interaction, client, author, supabase, auctions) {
         let { data: auction, error } = await supabase.from(config.supabase.tables.auctions).select('start, item, bids, host (id, username)').eq('item', interaction.options.getString('auction')).eq('open', true).limit(1);
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Fetching Auction', error.message)] });
         auction = auction[0];

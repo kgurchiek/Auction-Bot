@@ -10,27 +10,15 @@ module.exports = {
         option.setName('username')
             .setDescription('your in-game username')
             .setRequired(true)
-            .setAutocomplete(true)
         ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
-        const focusedValue = interaction.options.getFocused(true);
-        await interaction.respond(tallySheet.filter(a => a[0].toLowerCase().includes(focusedValue.value.toLowerCase())).map(a => ({ name: a[0], value: a[0] })).slice(0, 25));
-    },
     ephemeral: false,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions) {
+    async execute(interaction, client, author, supabase) {
         const username = interaction.options.getString('username');
 
         if ((await supabase.from(config.supabase.tables.users).select('*').eq('id', interaction.user.id).limit(1)).data[0] != null) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
                 .addFields({ name: 'Error', value: 'You have already created an account.' });
-            await interaction.editReply({ content: '', embeds: [errorEmbed] });
-            return;
-        }
-        if (!tallySheet.map(a => a[0]).includes(username)) {
-            const errorEmbed = new EmbedBuilder()
-                .setColor('#ff0000')
-                .addFields({ name: 'Error', value: 'Unknown username. Please contact a staff member.' });
             await interaction.editReply({ content: '', embeds: [errorEmbed] });
             return;
         }
@@ -44,7 +32,7 @@ module.exports = {
 
         let error;
         try {
-            let response = await supabase.from(config.supabase.tables.users).insert({ id: interaction.user.id, username: username, dkp: dkpSheet.find(a => a[0] == username)?.[2] || 0, ppp: pppSheet.find(a => a[0] == username)?.[2] || 0, frozen: false });
+            let response = await supabase.from(config.supabase.tables.users).insert({ id: interaction.user.id, username: username, dkp: 0, ppp: 0, frozen: false });
             
             if (response.error) error = response.error;
             else {

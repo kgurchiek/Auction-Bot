@@ -13,13 +13,13 @@ module.exports = {
             .setRequired(true)
             .setAutocomplete(true)
     ),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
+    async autocomplete(interaction, client, supabase, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
         let monsters = itemList.map(a => a.monster).filter((a, i, arr) => !arr.slice(0, i).includes(a) && a.toLowerCase().includes(focusedValue.value.toLowerCase()));
         await interaction.respond(monsters.sort((a, b) => a > b ? 1 : -1).map(a => ({ name: a, value: a })).slice(0, 25));
     },
     ephemeral: true,
-    async execute(interaction, client, author, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, updateSheets, itemList, auctionSheet) {
+    async execute(interaction, client, author, supabase, auctions, dkpChannel, pppChannel, rollChannel, itemList) {
         const monster = interaction.options.getString('monster');
         
         let { data: items, error } = await supabase.from(config.supabase.tables.items).select('*').eq('monster', monster);

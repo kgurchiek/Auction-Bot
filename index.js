@@ -5,179 +5,8 @@ const config = require('./config.json');
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(config.supabase.url, config.supabase.key);
 let auctions = require('./auctions.json');
-const { google } = require('googleapis');
 
 (async () => {
-    const auth = new google.auth.GoogleAuth({
-        credentials: config.google.credentials,
-        scopes: [
-            'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive.readonly'
-        ],
-    });
-    let googleClient = await auth.getClient();
-    let googleSheets = google.sheets({ version: 'v4', auth: googleClient });
-
-    let auctionSheet = {
-        DKP: [],
-        PPP: []
-    }
-    async function updateAuctionSheet() {
-        if (config.google.DKP.log != '') {
-            try {
-                let sheet = (await googleSheets.spreadsheets.values.get({
-                    spreadsheetId: config.google.DKP.id,
-                    range: config.google.DKP.log
-                })).data.values;
-                if (sheet[0][0] == 'Member Name') auctionSheet.DKP = sheet;
-            } catch (err) {
-                console.log('Error fetching auctions:', err);
-            }
-        }
-
-        if (config.google.PPP.log != '') {
-            try {
-                let sheet = (await googleSheets.spreadsheets.values.get({
-                    spreadsheetId: config.google.PPP.id,
-                    range: config.google.PPP.log
-                })).data.values;
-                if (sheet[0][0] == 'Member Name') auctionSheet.PPP = sheet;
-            } catch (err) {
-                console.log('Error fetching auctions:', err);
-            }
-        }
-        console.log(`[Auction Sheet]: Updated`);
-    }
-
-    let dkpSheet;
-    async function updateDKPSheet() {
-        let sheet = (await googleSheets.spreadsheets.values.get({
-            spreadsheetId: config.google.DKP.id,
-            range: config.google.DKP.sheet
-        })).data.values;
-        if (sheet[0][1] != 'Lifetime Points') {
-            console.log('Invalid dkp sheet:', sheet[0]);
-            return;
-        }
-        dkpSheet = sheet.slice(1).filter(a => a[0] != '');
-
-        dkpSheet.sort((a, b) => b[2] - a[2]);
-        let messages = Array.from((await dkpLeaderboard.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
-        let embeds = [];
-        let longestRank = Math.max(String(dkpSheet.length).length + 1, 'Live Rank'.length);
-        let longestName = dkpSheet.reduce((a, b) => Math.max(a, b[0].split('(')[0].trim().length), 'Member'.length);
-        let longestLifetime = dkpSheet.reduce((a, b) => Math.max(a, b[1].length), 'Lifetime'.length);
-        let longestCurrent = dkpSheet.reduce((a, b) => Math.max(a, b[2].length), 'Current'.length);
-        embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription(`\`\`\`\nLive Rank${' '.repeat(longestRank - 'Live Rank'.length)} | Member${' '.repeat(longestName - 'Member'.length)} | Lifetime${' '.repeat(longestLifetime - 'Lifetime'.length)} | Current${''.repeat(longestCurrent - 'Current'.length)}\n`))
-        dkpSheet.forEach((a, i) => {
-            let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
-            let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a[0].split('(')[0].trim()}${' '.repeat(longestName - a[0].split('(')[0].trim().length)} | ${a[1]}${' '.repeat(longestLifetime - a[1].length)} | ${a[2]}${''.repeat(longestCurrent - a[2].length)}\n`;
-            if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
-            embeds[embeds.length - 1].data.description += string;
-        })
-        embeds.forEach((a, i) => {
-            a.data.description += '```';
-            if (messages[i]) messages[i].edit({ embeds: [a] });
-            else dkpLeaderboard.send({ embeds: [a] });
-        });
-        for (let message of messages.slice(embeds.length)) await message.delete();
-
-        if (userList == null) return;
-        let updates = dkpSheet.map(a => {
-            let cost = 0;
-            for (let item of auctionSheet.DKP) if (item[0] == a[0] && item.length < 7) cost += parseFloat(item[3]);
-            return {
-              ...userList.find(b => b.username == a[0]),
-              dkp: parseFloat(a[2]) - cost
-            }
-        });
-        updates = updates.filter(a => a.id != null);
-        if (updates.length > 0) {
-            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
-            if (error) console.log('Error updating dkp:', error);
-            else console.log(`[DKP Sheet]: Updated ${updates.length} users.`);
-        }
-    }
-
-    let pppSheet;
-    async function updatePPPSheet() {
-        let sheet = (await googleSheets.spreadsheets.values.get({
-            spreadsheetId: config.google.PPP.id,
-            range: config.google.PPP.sheet
-        })).data.values;
-        if (sheet[0][0] != 'Member') {
-            console.log('Invalid ppp sheet:', sheet[0]);
-            return;
-        }
-        pppSheet = sheet.slice(1).filter(a => a[0] != '');
-
-        pppSheet.sort((a, b) => b[2] - a[2]);
-        let messages = Array.from((await pppLeaderboard.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
-        let embeds = [];
-        let longestRank = Math.max(String(pppSheet.length).length + 1, 'Live Rank'.length);
-        let longestName = pppSheet.reduce((a, b) => Math.max(a, b[0].split('(')[0].trim().length), 'Member'.length);
-        let longestLifetime = pppSheet.reduce((a, b) => Math.max(a, b[1].length), 'Lifetime'.length);
-        let longestCurrent = pppSheet.reduce((a, b) => Math.max(a, b[2].length), 'Current'.length);
-        embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription(`\`\`\`\nLive Rank${' '.repeat(longestRank - 'Live Rank'.length)} | Member${' '.repeat(longestName - 'Member'.length)} | Lifetime${' '.repeat(longestLifetime - 'Lifetime'.length)} | Current${''.repeat(longestCurrent - 'Current'.length)}\n`))
-        pppSheet.slice(0, 75).forEach((a, i) => {
-            let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
-            let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a[0].split('(')[0].trim()}${' '.repeat(longestName - a[0].split('(')[0].trim().length)} | ${a[1]}${' '.repeat(longestLifetime - a[1].length)} | ${a[2]}${''.repeat(longestCurrent - a[2].length)}\n`;
-            if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
-            embeds[embeds.length - 1].data.description += string;
-        })
-        embeds.forEach((a, i) => {
-            a.data.description += '```';
-            if (messages[i]) messages[i].edit({ embeds: [a] });
-            else pppLeaderboard.send({ embeds: [a] })
-        });
-        for (let message of messages.slice(embeds.length)) await message.delete();
-
-        let updates = pppSheet.map(a => {
-            let cost = 0;
-            for (let item of auctionSheet.PPP) if (item[0] == a[0] && item.length < 7) cost += parseFloat(item[3]);
-            return {
-              ...userList.find(b => b.username == a[0]),
-              ppp: parseFloat(a[2]) - cost
-            }
-        });
-        updates = updates.filter(a => a.id != null);
-        if (updates.length > 0) {
-            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
-            if (error) console.log('Error updating ppp:', error);
-            else console.log(`[PPP Sheet]: Updated ${updates.length} users.`);
-        }
-    }
-
-    let tallySheet;
-    async function updateTallySheet() {
-        let sheet = (await googleSheets.spreadsheets.values.get({
-            spreadsheetId: config.google.tally.id,
-            range: config.google.tally.sheet
-        })).data.values;
-        if (sheet[0][0] != 'Notes') {
-            console.log('Invalid tally sheet:', sheet[0]);
-            return;
-        }
-        tallySheet = sheet.slice(7).filter(a => a[0] != '');
-
-        let updates = tallySheet.map(a => ({
-            ...userList.find(b => b.username == a[0]),
-            frozen: a[2].toLowerCase() == 'true'
-        }));
-        updates = updates.filter(a => a.id != null);
-        if (updates.length > 0) {
-            let { error } = await supabase.from(config.supabase.tables.users).upsert(updates, { onConflict: ['id'] });
-            if (error) console.log('Error updating tally:', error);
-            else console.log(`[Tally Sheet]: Updated ${updates.length} users.`);
-        }
-    }
-
-    async function updateSheets() {
-        await updateAuctionSheet();
-        await Promise.all([updateDKPSheet(), updatePPPSheet(), updateTallySheet()]);
-        setTimeout(updateSheets, 1000 * 15);
-    }
-
     let itemList;
     async function updateItems () {
         let { data, error } = await supabase.from(config.supabase.tables.items).select('*').eq('available', true);
@@ -213,29 +42,6 @@ const { google } = require('googleapis');
             // console.log('Error fetching user list:', error.message);
             await new Promise(res => setTimeout(res, 1000));
         }
-        
-        if (tallySheet != null && mismatchChannel != null) {
-            let members = userList.filter(a => tallySheet.find(b => b[0] == a.username) == null).sort((a, b) => a.username > b.username ? 1 : -1);
-            console.log(members.map(a => a.username));
-            let messages = Array.from((await mismatchChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
-            let embeds = [];
-            embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Mismatched Users').setDescription('```\n'));
-            members.forEach((member, i) => {
-                let string = `${i + 1}${' '.repeat(String(members.length).length - String(i + 1).length)} | ${member.username}\n`;
-                if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
-                embeds[embeds.length - 1].data.description += string;
-            })
-            embeds.forEach(async (a, i) => {
-                a.data.description += '```';
-                if (i < messages.length) {
-                    console.log(JSON.stringify(a, 0, 2));
-                    await messages[i].edit({ embeds: [a] });
-                } else await mismatchChannel.send({ embeds: [a] });
-            });
-            for (let message of messages.slice(embeds.length)) await message.delete();
-            
-            console.log(`[Mismatch List]: Found ${members.length} mismatched users.`);
-        }
 
         setTimeout(updateUsers, 2000);
     }
@@ -268,6 +74,40 @@ const { google } = require('googleapis');
         setTimeout(updateUnregistered, 1000 * 60 * 5);
     }
 
+    async function updateLootHistory() {
+        let error;
+        let dkpHistory;
+        ({ data: dkpHistory, error } = await supabase.from(config.supabase.tables.DKP.lootHistory).select('*'));
+        if (error) return console.log('Error fetching dkp loot history:', error.message);
+
+        let pppHistory;
+        ({ data: pppHistory, error } = await supabase.from(config.supabase.tables.PPP.lootHistory).select('*'));
+        if (error) return console.log('Error fetching ppp loot history:', error.message);
+
+        let dkpItems;
+        ({ data: dkpItems, error } = await supabase.from(config.supabase.tables.DKP.ownedItems).select('*'));
+        if (error) return console.log('Error fetching owned dkp items:', error.message);
+
+        let pppItems;
+        ({ data: pppItems, error } = await supabase.from(config.supabase.tables.PPP.ownedItems).select('*'));
+        if (error) return console.log('Error fetching owned ppp items:', error.message);
+
+        for (let item of dkpHistory.filter((a, i) => dkpHistory.slice(0, i).find(b => b.user == a.user) == null)) {
+            let row = dkpItems.find(a => a.username == item.user);
+            if (row == null) ({ error } = await supabase.from(config.supabase.tables.DKP.ownedItems).insert({ username: item.user, items: dkpHistory.filter(a => a.user == item.user).map(a => a.item) }));
+            else ({ error } = await supabase.from(config.supabase.tables.DKP.ownedItems).update({ items: dkpHistory.filter(a => a.user == item.user).map(a => a.item) }).eq('username', item.user));
+            if (error) console.log('Error updating owned dkp items:', error.message);
+        }
+        for (let item of pppHistory.filter((a, i) => pppHistory.slice(0, i).find(b => b.user == a.user) == null)) {
+            let row = pppItems.find(a => a.username == item.user);
+            if (row == null) ({ error } = await supabase.from(config.supabase.tables.PPP.ownedItems).insert({ username: item.user, items: pppHistory.filter(a => a.user == item.user).map(a => a.item) }));
+            else ({ error } = await supabase.from(config.supabase.tables.PPP.ownedItems).update({ items: pppHistory.filter(a => a.user == item.user).map(a => a.item) }).eq('username', item.user));
+            if (error) console.log('Error updating owned ppp items:', error.message);
+        }
+        setTimeout(updateAuctions);
+    }
+    updateLootHistory();
+
     process.on('uncaughtException', console.error);
 
     const client = new Client({ partials: [Partials.Channel, Partials.GuildMember, Partials.Message], intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages] });
@@ -284,10 +124,7 @@ const { google } = require('googleapis');
     let dkpChannel;
     let pppChannel;
     let rollChannel;
-    let dkpLeaderboard;
-    let pppLeaderboard;
     let unregisteredChannel;
-    let mismatchChannel;
     client.once(Events.ClientReady, async () => {
         console.log(`[Bot]: ${client.user.tag}`);
         console.log(`[Servers]: ${client.guilds.cache.size}`);
@@ -295,10 +132,7 @@ const { google } = require('googleapis');
         dkpChannel = await client.channels.fetch(config.discord.dkpChannel);
         pppChannel = await client.channels.fetch(config.discord.pppChannel);
         rollChannel = await client.channels.fetch(config.discord.rollChannel);
-        dkpLeaderboard = await client.channels.fetch(config.discord.leaderboard.DKP);
-        pppLeaderboard = await client.channels.fetch(config.discord.leaderboard.PPP);
         if (config.discord.unregistered != '') unregisteredChannel = await client.channels.fetch(config.discord.unregistered);
-        if (config.discord.mismatch != '') mismatchChannel = await client.channels.fetch(config.discord.mismatch);
 
         for (const item in auctions) {
             if (auctions[item].DKP) {
@@ -333,7 +167,6 @@ const { google } = require('googleapis');
             }
         }
 
-        updateSheets();
         updateUnregistered();
     });
 
@@ -367,8 +200,7 @@ const { google } = require('googleapis');
             if (!command) return;
             await interaction.deferReply({ ephemeral: command.ephemeral });
             
-            let members = await guild.members.fetch();
-            let guildMember = members.get(interaction.user.id);
+            let guildMember = await guild.members.fetch(interaction.user.id);
             if (guildMember == null) {
                 let errorEmbed = new EmbedBuilder()
                     .setColor('#ff0000')
@@ -383,7 +215,7 @@ const { google } = require('googleapis');
             }
             
             try {
-                await command.execute(interaction, client, user, supabase, dkpSheet, pppSheet, tallySheet, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, updateSheets, itemList, auctionSheet);
+                await command.execute(interaction, client, user, supabase, auctions, dkpChannel, pppChannel, rollChannel, itemList);
             } catch (error) {
                 console.log(error);
                 var errorEmbed = new EmbedBuilder()
@@ -400,7 +232,7 @@ const { google } = require('googleapis');
             if (!command) return;
 
             try {
-                await command.autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList, auctionSheet);
+                await command.autocomplete(interaction, client, supabase, auctions, itemList, auctionList, userList);
             } catch (error) {
                 console.log(error);
                 try {
@@ -411,7 +243,7 @@ const { google } = require('googleapis');
         if (interaction.isButton()) {
             const command = client.commands.get(interaction.customId.split('-')[0]);
             try {
-                if (command?.buttonHandler) command.buttonHandler(interaction, user, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, itemList, client);
+                if (command?.buttonHandler) command.buttonHandler(interaction, user, supabase, auctions, dkpChannel, pppChannel, rollChannel, itemList, client);
             } catch (error) {
                 console.log(error);
                 var errorEmbed = new EmbedBuilder()

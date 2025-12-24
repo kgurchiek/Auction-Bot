@@ -6,11 +6,11 @@ const config = require('../config.json');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('closeitem'),
-    async autocomplete(interaction, client, supabase, dkpSheet, pppSheet, tallySheet, auctions, itemList, auctionList, userList) {
+    async autocomplete(interaction, client, supabase, auctions, itemList, auctionList, userList) {
         const focusedValue = interaction.options.getFocused(true);
         await interaction.respond(auctionList.filter(a => a.item.name.toLowerCase().includes(focusedValue.value.toLowerCase()) && auctions[a.item.monster] == null).map(a => ({ name: a.item.name, value: a.item.name })).sort((a, b) => a.name > b.name ? 1 : -1).slice(0, 25));
     },
-    async buttonHandler(interaction, author, supabase, auctions, dkpChannel, pppChannel, rollChannel, googleSheets, itemList, client) {
+    async buttonHandler(interaction, author, supabase, auctions, dkpChannel, pppChannel, rollChannel, itemList, client) {
         let item = interaction.customId.split('-')[1];
         let confirmed = interaction.customId.split('-')[2] == 'true';
         if (!confirmed) {
@@ -121,24 +121,13 @@ module.exports = {
         }
 
         if (auction.bids.length > 0) {
-            if (config.google[auction.item.type].log != '') {
-                await googleSheets.spreadsheets.values.append({
-                    spreadsheetId: config.google[auction.item.type].id,
-                    range: config.google[auction.item.type].log,
-                    valueInputOption: 'RAW',
-                    resource: {
-                        values: [
-                            [
-                                winner.user,
-                                auction.item.name,
-                                auction.item.monster,
-                                `${winner.amount} ${auction.item.type.toLowerCase() == 'dkp' ? 'dkp' : 'PPP'}`,
-                                new Date().toLocaleString()
-                            ]
-                        ]
-                    }
-                });
-            }
+            ({error} = await supabase.rpc('increment_points', {
+                table_name: config.supabase.tables.users,
+                username: winner.user,
+                type: auction.item.type.toLowerCase(),
+                amount: -winner.amount
+            }))
+            if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Removing Points', error.message)] });
         }
 
         if (auctions[item]?.[auction.item.type]) {
