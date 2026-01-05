@@ -7,12 +7,12 @@
             "items": "items",
             "auctions": "auctions",
             "DKP": {
-                "lootHistory": "loot-history_dkp",
-                "ownedItems": ""
+                "lootHistory": "loot_history_dkp",
+                "ownedItems": "owned_items_dkp"
             },
             "PPP": {
                 "lootHistory": "loot_history_ppp",
-                "ownedItems": ""
+                "ownedItems": "owned_items_ppp"
             }
         }
     },
@@ -25,7 +25,11 @@
         "dkpChannel": "",
         "pppChannel": "",
         "rollChannel": "",
-        "unregistered": ""
+        "unregistered": "",
+        "leaderboard": {
+            "DKP": "",
+            "PPP": ""
+        }
     },
     "auction": {
         "DKP": {

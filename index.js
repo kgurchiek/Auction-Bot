@@ -8,7 +8,7 @@ let auctions = require('./auctions.json');
 
 (async () => {
     let itemList;
-    async function updateItems () {
+    async function updateItems() {
         let { data, error } = await supabase.from(config.supabase.tables.items).select('*').eq('available', true);
         if (error == null) itemList = data;
         else {
@@ -33,10 +33,34 @@ let auctions = require('./auctions.json');
 
     let userList;
     async function updateUsers() {
-        let { data, error } = await supabase.from(config.supabase.tables.users).select('id::text, username, dkp, ppp, frozen');
+        let { data, error } = await supabase.from(config.supabase.tables.users).select('*');
         if (error == null) {
             userList = data;
             console.log(`[User List]: Fetched ${userList.length} users.`);
+
+            for (let type of ['DKP', 'PPP']) {
+                let messages = Array.from((await leaderboards[type].messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
+                let embeds = [];
+                let longestRank = Math.max(String(userList.length).length + 1, 'Live Rank'.length);
+                let longestName = userList.reduce((a, b) => Math.max(a, b.name.split('(')[0].trim().length), 'Member'.length);
+                let longestLifetime = userList.reduce((a, b) => Math.max(a, b[type == 'DKP' ? 'lifetime_dkp' : 'lifetime_ppp'].length), 'Lifetime'.length);
+                let longestCurrent = userList.reduce((a, b) => Math.max(a, b[type.toLowerCase()].length), 'Current'.length);
+                embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription(`\`\`\`\nLive Rank${' '.repeat(longestRank - 'Live Rank'.length)} | Member${' '.repeat(longestName - 'Member'.length)} | Lifetime${' '.repeat(longestLifetime - 'Lifetime'.length)} | Current${''.repeat(longestCurrent - 'Current'.length)}\n`))
+                userList.forEach((a, i) => {
+                    let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
+                    let lifetime = a[type == 'DKP' ? 'lifetime_dkp' : 'lifetime_ppp'];
+                    let points = a[type.toLowerCase()];
+                    let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a.name.split('(')[0].trim()}${' '.repeat(longestName - a.name.split('(')[0].trim().length)} | ${lifetime}${' '.repeat(longestLifetime - lifetime.length)} | ${points}${''.repeat(longestCurrent - points.length)}\n`;
+                    if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
+                    embeds[embeds.length - 1].data.description += string;
+                })
+                embeds.forEach((a, i) => {
+                    a.data.description += '```';
+                    if (messages[i]) messages[i].edit({ embeds: [a] });
+                    else leaderboards[type].send({ embeds: [a] });
+                });
+                for (let message of messages.slice(embeds.length)) await message.delete();
+            }
         }
         else {
             // console.log('Error fetching user list:', error.message);
@@ -125,6 +149,7 @@ let auctions = require('./auctions.json');
     let pppChannel;
     let rollChannel;
     let unregisteredChannel;
+    let leaderboards;
     client.once(Events.ClientReady, async () => {
         console.log(`[Bot]: ${client.user.tag}`);
         console.log(`[Servers]: ${client.guilds.cache.size}`);
@@ -133,6 +158,10 @@ let auctions = require('./auctions.json');
         pppChannel = await client.channels.fetch(config.discord.pppChannel);
         rollChannel = await client.channels.fetch(config.discord.rollChannel);
         if (config.discord.unregistered != '') unregisteredChannel = await client.channels.fetch(config.discord.unregistered);
+        leaderboards = {
+            DKP: await client.channels.fetch(config.discord.leaderboard.DKP),
+            PPP: await client.channels.fetch(config.discord.leaderboard.PPP)
+        }
 
         for (const item in auctions) {
             if (auctions[item].DKP) {
