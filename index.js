@@ -42,7 +42,7 @@ let auctions = require('./auctions.json');
                 let messages = Array.from((await leaderboards[type].messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
                 let embeds = [];
                 let longestRank = Math.max(String(userList.length).length + 1, 'Live Rank'.length);
-                let longestName = userList.reduce((a, b) => Math.max(a, b.name.split('(')[0].trim().length), 'Member'.length);
+                let longestName = userList.reduce((a, b) => Math.max(a, b.username.split('(')[0].trim().length), 'Member'.length);
                 let longestLifetime = userList.reduce((a, b) => Math.max(a, b[type == 'DKP' ? 'lifetime_dkp' : 'lifetime_ppp'].length), 'Lifetime'.length);
                 let longestCurrent = userList.reduce((a, b) => Math.max(a, b[type.toLowerCase()].length), 'Current'.length);
                 embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription(`\`\`\`\nLive Rank${' '.repeat(longestRank - 'Live Rank'.length)} | Member${' '.repeat(longestName - 'Member'.length)} | Lifetime${' '.repeat(longestLifetime - 'Lifetime'.length)} | Current${''.repeat(longestCurrent - 'Current'.length)}\n`))
@@ -50,7 +50,7 @@ let auctions = require('./auctions.json');
                     let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
                     let lifetime = a[type == 'DKP' ? 'lifetime_dkp' : 'lifetime_ppp'];
                     let points = a[type.toLowerCase()];
-                    let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a.name.split('(')[0].trim()}${' '.repeat(longestName - a.name.split('(')[0].trim().length)} | ${lifetime}${' '.repeat(longestLifetime - lifetime.length)} | ${points}${''.repeat(longestCurrent - points.length)}\n`;
+                    let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a.username.split('(')[0].trim()}${' '.repeat(longestName - a.username.split('(')[0].trim().length)} | ${lifetime}${' '.repeat(longestLifetime - lifetime.length)} | ${points}${''.repeat(longestCurrent - points.length)}\n`;
                     if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
                     embeds[embeds.length - 1].data.description += string;
                 })
@@ -69,7 +69,6 @@ let auctions = require('./auctions.json');
 
         setTimeout(updateUsers, 2000);
     }
-    updateUsers();
 
     async function updateUnregistered() {
         if (unregisteredChannel == null) return;
@@ -196,7 +195,9 @@ let auctions = require('./auctions.json');
             }
         }
 
-        updateUnregistered();
+        
+        await updateUsers();
+        await updateUnregistered();
     });
 
     async function getUser(id) {
