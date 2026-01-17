@@ -162,7 +162,6 @@ module.exports = {
 
                 let { min, increment, raise, winRaise } = config.auction[auction.item.type];
                 min = auction.bids[auction.bids.length - 1]?.amount || min - raise;
-                console.log(min)
                 if (Math.round((author[auction.item.type.toLowerCase()] - (auction.item.wipe ? 0 : cost)) / increment) * increment < amount) {
                     const errorEmbed = new EmbedBuilder()
                         .setColor('#ff0000')

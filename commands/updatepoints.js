@@ -31,8 +31,6 @@ module.exports = {
         const type = interaction.options.getString('type');
         const amount = interaction.options.getNumber('amount');
 
-        console.log({ type, amount });
-
         if (!author.staff) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
