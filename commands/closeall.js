@@ -133,7 +133,7 @@ module.exports = {
             if (auction.bids.length > 0) {
                 ({error} = await supabase.rpc('increment_points', {
                     table_name: config.supabase.tables.users,
-                    username: winner.user,
+                    id: winner.userId,
                     type: auction.item.type.toLowerCase(),
                     amount: -winner.amount
                 }))

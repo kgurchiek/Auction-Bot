@@ -36,7 +36,7 @@ let auctions = require('./auctions.json');
         let { data, error } = await supabase.from(config.supabase.tables.users).select('*');
         if (error == null) {
             userList = data;
-            console.log(`[User List]: Fetched ${userList.length} users.`);
+            // console.log(`[User List]: Fetched ${userList.length} users.`);
 
             for (let type of ['DKP', 'PPP']) {
                 let messages = Array.from((await leaderboards[type].messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
@@ -92,7 +92,7 @@ let auctions = require('./auctions.json');
         });
         for (let message of messages.slice(embeds.length)) await message.delete();
 
-        console.log(`[Unregistered List]: Found ${members.length} unregistered users.`)
+        // console.log(`[Unregistered List]: Found ${members.length} unregistered users.`)
 
         setTimeout(updateUnregistered, 1000 * 60 * 5);
     }

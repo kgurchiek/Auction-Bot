@@ -199,7 +199,7 @@ module.exports = {
                     return;
                 }
 
-                auction.bids.push({ user: author.username, amount, wipe: amount == author[auction.item.type.toLowerCase()] });
+                auction.bids.push({ userId: author.id, user: author.username, amount, wipe: amount == author[auction.item.type.toLowerCase()] });
                 ({ error } = await supabase.from(config.supabase.tables.auctions).update({
                     bids: auction.bids,
                     winner: auction.bids.filter(a => a.amount == amount).map(a => a.user).join(', '),
