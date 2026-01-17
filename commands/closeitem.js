@@ -117,7 +117,7 @@ module.exports = {
                 points_spent: winner.amount,
                 auction: auction.id
             }));
-            if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed('Error Updating Loot History', error.message)] });
+            if (error) return await interaction.followUp({ content: '', embeds: [errorEmbed(`Error Updating Loot History (auction ${auction.id})`, error.message)] });
         }
 
         if (auction.bids.length > 0) {

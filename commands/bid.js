@@ -166,7 +166,7 @@ module.exports = {
                     const errorEmbed = new EmbedBuilder()
                         .setColor('#ff0000')
                         .setTitle('Insufficient Funds')
-                        .setDescription(`You only have **${author[auction.item.type.toLowerCase()] - cost} ${auction.item.type}** left to bid on ${auction.item.name}${cost == 0 ? '' : ` (You're currently spending **${cost} ${auction.item.type}** on ${userBids.length} auction${userBids.length == 1 ? '' : 's'})`}.`);
+                        .setDescription(`You only have **${(author[auction.item.type.toLowerCase()] - cost).toFixed(1)} ${auction.item.type}** left to bid on ${auction.item.name}${cost == 0 ? '' : ` (You're currently spending **${cost} ${auction.item.type}** on ${userBids.length} auction${userBids.length == 1 ? '' : 's'})`}.`);
                     await interaction.editReply({ embeds: [errorEmbed] });
                     return;
                 }
