@@ -2,83 +2,137 @@ const { Client, Partials, Collection, Events, GatewayIntentBits, EmbedBuilder } 
 const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
+if (config.api.url.endsWith('/')) config.api.url = config.api.url.slice(0, -1);
+const { newLogEmbed } = require('./lib.js');
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(config.supabase.url, config.supabase.key);
-let auctions = require('./auctions.json');
 
 (async () => {
     let itemList;
+    let lastItemUpdate = 0;
     async function updateItems() {
+        let startTime = Date.now();
         let { data, error } = await supabase.from(config.supabase.tables.items).select('*').eq('available', true);
+
+        if (lastItemUpdate > startTime) return;
+        lastItemUpdate = startTime;
+        
         if (error == null) itemList = data;
         else {
             // console.log('Error fetching item list:', error.message);
             await new Promise(res => setTimeout(res, 1000));
         }
-        setTimeout(updateItems);
     }
-    updateItems();
+    setInterval(updateItems, 2000);
 
     let auctionList;
+    let lastAuctionUpdate = 0;
     async function updateAuctions() {
-        let { data, error } = await supabase.from(config.supabase.tables.auctions).select('id::text, start, item (name, type, monster, available, wipe), bids, host, winner, price').eq('open', true);
-        if (error == null) auctionList = data;
-        else {
-            // console.log('Error fetching auction list:', error.message);
-            await new Promise(res => setTimeout(res, 1000));
+        let startTime = Date.now();
+        let response, error;
+        try {
+            response = await (await fetch(`${config.api.url}/auctions?open=true`, {
+                headers: {
+                    authorization: `Bearer ${config.api.token}`
+                }
+            })).json();
+            if (response.error) error = response;
+        } catch (err) {
+            error = err;
         }
-        setTimeout(updateAuctions);
-    }
-    updateAuctions();
+        if (error) {
+            // console.log('Error fetching auction list:', error);
+            await new Promise(res => setTimeout(res, 1000));
+            return;
+        }
+        
+        if (lastAuctionUpdate > startTime) return;
+        lastAuctionUpdate = startTime;
+        auctionList = response;
 
-    let userList;
-    async function updateUsers() {
-        let { data, error } = await supabase.from(config.supabase.tables.users).select('*');
-        if (error == null) {
-            userList = data;
-            // console.log(`[User List]: Fetched ${userList.length} users.`);
+        for (let auction of auctionList) {
+            if (auctions[auction.item.name] == null) auctions[auction.item.name] = {};
+            let type = auction.item.type;
+            if (auctions[auction.item.name][type] == null) auctions[auction.item.name][type] = {};
+            const channel = type == 'DKP' ? dkpChannel : pppChannel;
+            let { embed, buttons } = newLogEmbed(auction.host, auction.item.name, auction.item.monster, auction.item.type, Math.round(new Date(auction.start).getTime() / 1000), auction.bids);
 
-            for (let type of ['DKP', 'PPP']) {
-                let messages = Array.from((await leaderboards[type].messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
-                let embeds = [];
-                let longestRank = Math.max(String(userList.length).length + 1, 'Live Rank'.length);
-                let longestName = userList.reduce((a, b) => Math.max(a, b.username.split('(')[0].trim().length), 'Member'.length);
-                let longestLifetime = userList.reduce((a, b) => Math.max(a, b[type == 'DKP' ? 'lifetime_dkp' : 'lifetime_ppp'].length), 'Lifetime'.length);
-                let longestCurrent = userList.reduce((a, b) => Math.max(a, b[type.toLowerCase()].length), 'Current'.length);
-                embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription(`\`\`\`\nLive Rank${' '.repeat(longestRank - 'Live Rank'.length)} | Member${' '.repeat(longestName - 'Member'.length)} | Lifetime${' '.repeat(longestLifetime - 'Lifetime'.length)} | Current${''.repeat(longestCurrent - 'Current'.length)}\n`))
-                userList.forEach((a, i) => {
-                    let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
-                    let lifetime = a[type == 'DKP' ? 'lifetime_dkp' : 'lifetime_ppp'];
-                    let points = a[type.toLowerCase()];
-                    let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a.username.split('(')[0].trim()}${' '.repeat(longestName - a.username.split('(')[0].trim().length)} | ${lifetime}${' '.repeat(longestLifetime - lifetime.length)} | ${points}${''.repeat(longestCurrent - points.length)}\n`;
-                    if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
-                    embeds[embeds.length - 1].data.description += string;
-                })
-                embeds.forEach((a, i) => {
-                    a.data.description += '```';
-                    if (messages[i]) messages[i].edit({ embeds: [a] });
-                    else leaderboards[type].send({ embeds: [a] });
-                });
-                for (let message of messages.slice(embeds.length)) await message.delete();
+            if (auction.message != null) {
+                try {
+                    const message = await channel.messages.fetch(auction.message);
+                    auctions[auction.item.name][type].message = message;
+                    auctions[auction.item.name][type].embed = embed;
+                    auctions[auction.item.name][type].buttons = [buttons];
+                    await message.edit({ embeds: [embed], components: [buttons] });
+                } catch (error) {
+                    console.log(`Error updating message for ${auction.item.name}:`, error);
+                }
+            }
+            
+            if (auctions[auction.item.name][type].message == null) {
+                auctions[auction.item.name][type] = { embed, buttons };
+                try {
+                    auctions[auction.item.name][type].message = await channel.send({ embeds: [embed], components: [buttons] });
+                    let { error } = await supabase.from(config.supabase.tables.auctions).update({ message: auctions[auction.item.name][type].message.id }).eq('id', auction.id);
+                    if (error) throw Error(error.message);
+                } catch (err) {
+                    console.log(`Error sending message for ${auction.item.name} auction:`, err);
+                }
             }
         }
-        else {
-            // console.log('Error fetching user list:', error.message);
-            await new Promise(res => setTimeout(res, 1000));
-        }
-
-        setTimeout(updateUsers, 2000);
     }
 
+    let userList;
+    let lastUserUpdate = 0;
+    async function updateUsers() {
+        let startTime = Date.now();
+        let { data, error } = await supabase.from(config.supabase.tables.users).select('*');
+        if (error) return console.log('Error fetching user list:', error.message);
+        if (lastUserUpdate > startTime) return;
+        lastUserUpdate = startTime;
+        userList = data;
+        // console.log(`[User List]: Fetched ${userList.length} users.`);
+
+        for (let type of ['DKP', 'PPP']) {
+            let messages = Array.from((await leaderboards[type].messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
+            let embeds = [];
+            let longestRank = Math.max(String(userList.length).length + 1, 'Live Rank'.length);
+            let longestName = userList.reduce((a, b) => Math.max(a, b.username.split('(')[0].trim().length), 'Member'.length);
+            let longestLifetime = userList.reduce((a, b) => Math.max(a, b[type == 'DKP' ? 'lifetime_dkp' : 'lifetime_ppp'].length), 'Lifetime'.length);
+            let longestCurrent = userList.reduce((a, b) => Math.max(a, b[type.toLowerCase()].length), 'Current'.length);
+            embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Leaderboard').setDescription(`\`\`\`\nLive Rank${' '.repeat(longestRank - 'Live Rank'.length)} | Member${' '.repeat(longestName - 'Member'.length)} | Lifetime${' '.repeat(longestLifetime - 'Lifetime'.length)} | Current${''.repeat(longestCurrent - 'Current'.length)}\n`))
+            userList.forEach((a, i) => {
+                let rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`;
+                let lifetime = a[type == 'DKP' ? 'lifetime_dkp' : 'lifetime_ppp'];
+                let points = a[type.toLowerCase()];
+                let string = `${rank}${' '.repeat(longestRank - rank.length)} | ${a.username.split('(')[0].trim()}${' '.repeat(longestName - a.username.split('(')[0].trim().length)} | ${lifetime}${' '.repeat(longestLifetime - lifetime.length)} | ${points}${''.repeat(longestCurrent - points.length)}\n`;
+                if (embeds[embeds.length - 1].data.description.length + string.length > 4093) embeds.push(new EmbedBuilder().setColor('#00ff00').setDescription('```'));
+                embeds[embeds.length - 1].data.description += string;
+            })
+            embeds.forEach((a, i) => {
+                a.data.description += '```';
+                if (messages[i]) messages[i].edit({ embeds: [a] });
+                else leaderboards[type].send({ embeds: [a] });
+            });
+            for (let message of messages.slice(embeds.length)) await message.delete();
+        }
+    }
+
+    let lastUnregisteredUpdate = 0;
     async function updateUnregistered() {
         if (unregisteredChannel == null) return;
+        let startTime = Date.now();
         let members = Array.from((await guild.members.fetch()).values()).filter(a => !a.user.bot && !a.roles.cache.get(config.discord.inactiveRole));
         members = members.map(a => new Promise(async res => res({ member: a, account: await supabase.from(config.supabase.tables.users).select('id::text').eq('id', a.id)})));
         members = (await Promise.all(members)).filter(a => a.account.data?.length == 0).map(a => a.member);
         members.sort((a, b) => a.user.username > b.user.username ? 1 : -1);
 
+        if (lastUnregisteredUpdate > startTime) return;
+        lastUnregisteredUpdate = startTime;
+
         let messages = Array.from((await unregisteredChannel.messages.fetch({ limit: 100, cache: false })).values()).filter(a => a.author.id == client.user.id).reverse();
         let embeds = [];
+        
         embeds.push(new EmbedBuilder().setColor('#00ff00').setTitle('Unregistered Users').setDescription('```\n'));
         members.forEach((member, i) => {
             let string = `${i + 1}${' '.repeat(String(members.length).length - String(i + 1).length)} | ${member.user.username}\n`;
@@ -93,11 +147,11 @@ let auctions = require('./auctions.json');
         for (let message of messages.slice(embeds.length)) await message.delete();
 
         // console.log(`[Unregistered List]: Found ${members.length} unregistered users.`)
-
-        setTimeout(updateUnregistered, 1000 * 60 * 5);
     }
 
+    let lastLootHistoryUpdate = 0;
     async function updateLootHistory() {
+        let startTime = Date.now();
         let error;
         let dkpHistory;
         ({ data: dkpHistory, error } = await supabase.from(config.supabase.tables.DKP.lootHistory).select('*'));
@@ -115,6 +169,9 @@ let auctions = require('./auctions.json');
         ({ data: pppItems, error } = await supabase.from(config.supabase.tables.PPP.ownedItems).select('*'));
         if (error) return console.log('Error fetching owned ppp items:', error.message);
 
+        if (lastLootHistoryUpdate > startTime) return;
+        lastLootHistoryUpdate = startTime;
+
         for (let item of dkpHistory.filter((a, i) => dkpHistory.slice(0, i).find(b => b.user == a.user) == null)) {
             let row = dkpItems.find(a => a.username == item.user);
             if (row == null) ({ error } = await supabase.from(config.supabase.tables.DKP.ownedItems).insert({ username: item.user, items: dkpHistory.filter(a => a.user == item.user).map(a => a.item) }));
@@ -127,7 +184,7 @@ let auctions = require('./auctions.json');
             else ({ error } = await supabase.from(config.supabase.tables.PPP.ownedItems).update({ items: pppHistory.filter(a => a.user == item.user).map(a => a.item) }).eq('username', item.user));
             if (error) console.log('Error updating owned ppp items:', error.message);
         }
-        setTimeout(updateAuctions);
+        setTimeout(updateLootHistory);
     }
     updateLootHistory();
 
@@ -149,6 +206,7 @@ let auctions = require('./auctions.json');
     let rollChannel;
     let unregisteredChannel;
     let leaderboards;
+    let auctions = {};
     client.once(Events.ClientReady, async () => {
         console.log(`[Bot]: ${client.user.tag}`);
         console.log(`[Servers]: ${client.guilds.cache.size}`);
@@ -162,42 +220,14 @@ let auctions = require('./auctions.json');
             PPP: await client.channels.fetch(config.discord.leaderboard.PPP)
         }
 
-        for (const item in auctions) {
-            if (auctions[item].DKP) {
-                const dkpChannel = await client.channels.fetch(auctions[item].DKP.message.channelId);
-                if (dkpChannel) {
-                    try {
-                        const message = await dkpChannel.messages.fetch(auctions[item].DKP.message.id);
-                        auctions[item].DKP.message = message;
-                    } catch (error) {
-                        console.log(`Error fetching DKP message for ${item}:`, error);
-                        auctions[item] = {};
-                    }
-                } else {
-                    console.log(`DKP Channel not found for auction ${item}`);
-                    auctions[item] == {};
-                }
-            }
-            if (auctions[item].PPP) {
-                const pppChannel = await client.channels.fetch(auctions[item].PPP.message.channelId);
-                if (pppChannel) {
-                    try {
-                        const message = await pppChannel.messages.fetch(auctions[item].PPP.message.id);
-                        auctions[item].PPP.message = message;
-                    } catch (error) {
-                        console.log(`Error fetching PPP message for ${item}:`, error);
-                        auctions[item] = {};
-                    }
-                } else {
-                    console.log(`PPP Channel not found for auction ${item}`);
-                    auctions[item] = {};
-                }
-            }
-        }
+        await updateAuctions();
+        setInterval(updateAuctions, 2000);
 
-        
         await updateUsers();
         await updateUnregistered();
+
+        setInterval(updateUsers, 2000);
+        setInterval(updateUnregistered, 1000 * 60 * 5);
     });
 
     async function getUser(id) {
