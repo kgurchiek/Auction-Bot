@@ -54,13 +54,11 @@ const supabase = createClient(config.supabase.url, config.supabase.key);
         console.log(auctionList.map(a => a.item.name))
         for (let auction of auctionList) {
             promises.push((async () => {
-                // console.log(auction)
                 if (auctions[auction.item.name] == null) auctions[auction.item.name] = {};
                 let type = auction.item.type;
                 if (auctions[auction.item.name][type] == null) auctions[auction.item.name][type] = {};
                 const channel = type == 'DKP' ? dkpChannel : pppChannel;
                 let { embed, buttons } = newLogEmbed(auction.host, auction.item.name, auction.item.monster, auction.item.type, Math.round(new Date(auction.start).getTime() / 1000), auction.bids);
-                console.log(auction.item.name, auction.bids)
     
                 if (auctions[auction.item.name][type].message == null) {
                     if (auction.message == null) {
@@ -69,7 +67,6 @@ const supabase = createClient(config.supabase.url, config.supabase.key);
                             auctions[auction.item.name][type].message = await channel.send({ embeds: [embed], components: [buttons] });
                             let { data, error } = await supabase.from(config.supabase.tables.auctions).update({ message: auctions[auction.item.name][type].message.id }).eq('id', auction.id).select('*');
                             if (error) throw Error(error.message);
-                            console.log(data)
                         } catch (err) {
                             console.log(`Error sending message for ${auction.item.name} auction:`, err);
                         }
