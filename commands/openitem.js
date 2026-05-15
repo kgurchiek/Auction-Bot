@@ -99,10 +99,5 @@ module.exports = {
                 .setDescription(`Failed to send auction message for **${item.name}**.`);
             await interaction.editReply({ content: '', embeds: [newEmbed, errorEmbed] });
         }
-        try {
-            fs.writeFileSync('./auctions.json', JSON.stringify(auctions, '', '  '));
-        } catch (err) {
-            console.log('Error saving auctions:', err);
-        }
     }
 }

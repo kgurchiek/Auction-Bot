@@ -209,10 +209,5 @@ module.exports = {
             }
             delete auctions[monster];
         }
-        try {
-            fs.writeFileSync('./auctions.json', JSON.stringify(auctions, '', '  '));
-        } catch (err) {
-            console.log('Error saving auctions:', err);
-        }
     }
 }

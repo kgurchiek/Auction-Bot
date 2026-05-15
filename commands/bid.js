@@ -244,11 +244,6 @@ module.exports = {
                         await auctions[auction.item.monster][auction.item.type].message.edit({ embeds: [newEmbed] });
                     }
                 }
-                try {
-                    fs.writeFileSync('./auctions.json', JSON.stringify(auctions, '', '  '));
-                } catch (err) {
-                    console.log('Error saving auctions:', err);
-                }
             }
         });
     }

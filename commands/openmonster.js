@@ -164,10 +164,5 @@ module.exports = {
         } catch (err) {
             return await interaction.editReply({ content: '', embeds: [newEmbed, errorEmbed(`Error Sending Auction Message for ${monster}`, error.message)] });
         }
-        try {
-            fs.writeFileSync('./auctions.json', JSON.stringify(auctions, '', '  '));
-        } catch (err) {
-            console.log('Error saving auctions:', err);
-        }
     }
 }

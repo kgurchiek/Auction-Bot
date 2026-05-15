@@ -151,11 +151,5 @@ module.exports = {
             await auctions[item][auction.item.type].message.edit({ embeds: [logEmbed], components: [] });
             delete auctions[item];
         }
-
-        try {
-            fs.writeFileSync('./auctions.json', JSON.stringify(auctions, '', '  '));
-        } catch (err) {
-            console.log('Error saving auctions:', err);
-        }
     }
 }

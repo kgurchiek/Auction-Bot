@@ -50,36 +50,44 @@ const supabase = createClient(config.supabase.url, config.supabase.key);
         lastAuctionUpdate = startTime;
         auctionList = response;
 
+        let promises = [];
+        console.log(auctionList.map(a => a.item.name))
         for (let auction of auctionList) {
-            if (auctions[auction.item.name] == null) auctions[auction.item.name] = {};
-            let type = auction.item.type;
-            if (auctions[auction.item.name][type] == null) auctions[auction.item.name][type] = {};
-            const channel = type == 'DKP' ? dkpChannel : pppChannel;
-            let { embed, buttons } = newLogEmbed(auction.host, auction.item.name, auction.item.monster, auction.item.type, Math.round(new Date(auction.start).getTime() / 1000), auction.bids);
-
-            if (auction.message != null) {
-                try {
-                    const message = await channel.messages.fetch(auction.message);
-                    auctions[auction.item.name][type].message = message;
-                    auctions[auction.item.name][type].embed = embed;
-                    auctions[auction.item.name][type].buttons = [buttons];
-                    await message.edit({ embeds: [embed], components: [buttons] });
-                } catch (error) {
-                    console.log(`Error updating message for ${auction.item.name}:`, error);
-                }
-            }
-            
-            if (auctions[auction.item.name][type].message == null) {
-                auctions[auction.item.name][type] = { embed, buttons };
-                try {
-                    auctions[auction.item.name][type].message = await channel.send({ embeds: [embed], components: [buttons] });
-                    let { error } = await supabase.from(config.supabase.tables.auctions).update({ message: auctions[auction.item.name][type].message.id }).eq('id', auction.id);
-                    if (error) throw Error(error.message);
-                } catch (err) {
-                    console.log(`Error sending message for ${auction.item.name} auction:`, err);
-                }
-            }
+            promises.push((async () => {
+                // console.log(auction)
+                if (auctions[auction.item.name] == null) auctions[auction.item.name] = {};
+                let type = auction.item.type;
+                if (auctions[auction.item.name][type] == null) auctions[auction.item.name][type] = {};
+                const channel = type == 'DKP' ? dkpChannel : pppChannel;
+                let { embed, buttons } = newLogEmbed(auction.host, auction.item.name, auction.item.monster, auction.item.type, Math.round(new Date(auction.start).getTime() / 1000), auction.bids);
+                console.log(auction.item.name, auction.bids)
+    
+                if (auctions[auction.item.name][type].message == null) {
+                    if (auction.message == null) {
+                        auctions[auction.item.name][type] = { embed, buttons };
+                        try {
+                            auctions[auction.item.name][type].message = await channel.send({ embeds: [embed], components: [buttons] });
+                            let { data, error } = await supabase.from(config.supabase.tables.auctions).update({ message: auctions[auction.item.name][type].message.id }).eq('id', auction.id).select('*');
+                            if (error) throw Error(error.message);
+                            console.log(data)
+                        } catch (err) {
+                            console.log(`Error sending message for ${auction.item.name} auction:`, err);
+                        }
+                    } else {
+                        try {
+                            const message = await channel.messages.fetch(auction.message);
+                            auctions[auction.item.name][type].message = message;
+                            auctions[auction.item.name][type].embed = embed;
+                            auctions[auction.item.name][type].buttons = [buttons];
+                            await message.edit({ embeds: [embed], components: [buttons] });
+                        } catch (error) {
+                            console.log(`Error updating message for ${auction.item.name}:`, error);
+                        }
+                    }
+                } else await auctions[auction.item.name][type].message.edit({ embeds: [embed], components: [buttons] });
+            })())
         }
+        await Promise.all(promises);
     }
 
     let userList;
@@ -363,11 +371,6 @@ const supabase = createClient(config.supabase.url, config.supabase.key);
                 if (foundDKP) auction.DKP.message = await dkpChannel.send({ embeds: [auction.DKP.embed], components: auction.DKP.buttons });
                 if (foundPPP) auction.PPP.message = await pppChannel.send({ embeds: [auction.PPP.embed], components: auction.PPP.buttons });
             } else delete auctions[item];
-        }
-        try {
-            fs.writeFileSync('./auctions.json', JSON.stringify(auctions, '', '  '));
-        } catch (err) {
-            console.log('Error saving auctions:', err);
         }
     })
 
