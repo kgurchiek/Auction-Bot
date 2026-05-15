@@ -51,7 +51,6 @@ const supabase = createClient(config.supabase.url, config.supabase.key);
         auctionList = response;
 
         let promises = [];
-        console.log(auctionList.map(a => a.item.name))
         for (let auction of auctionList) {
             promises.push((async () => {
                 if (auctions[auction.item.name] == null) auctions[auction.item.name] = {};
