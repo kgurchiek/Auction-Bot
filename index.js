@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
 if (config.api.url.endsWith('/')) config.api.url = config.api.url.slice(0, -1);
-const { newLogEmbed } = require('./lib.js');
+const { createAuctionEmbed, createMonsterEmbed } = require('./lib.js');
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(config.supabase.url, config.supabase.key);
 
@@ -23,6 +23,7 @@ const supabase = createClient(config.supabase.url, config.supabase.key);
             await new Promise(res => setTimeout(res, 1000));
         }
     }
+    await updateItems();
     setInterval(updateItems, 2000);
 
     let auctionList;
@@ -51,36 +52,49 @@ const supabase = createClient(config.supabase.url, config.supabase.key);
         auctionList = response;
 
         let promises = [];
-        for (let auction of auctionList) {
+        for (let auction of auctionList.filter((a, i, arr) => !(a.monster && arr.slice(0, i).find(b => b.item.monster == a.item.monster)))) {
             promises.push((async () => {
-                if (auctions[auction.item.name] == null) auctions[auction.item.name] = {};
                 let type = auction.item.type;
-                if (auctions[auction.item.name][type] == null) auctions[auction.item.name][type] = {};
                 const channel = type == 'DKP' ? dkpChannel : pppChannel;
-                let { embed, buttons } = newLogEmbed(auction.host, auction.item.name, auction.item.monster, auction.item.type, Math.round(new Date(auction.start).getTime() / 1000), auction.bids);
-    
-                if (auctions[auction.item.name][type].message == null) {
-                    if (auction.message == null) {
-                        auctions[auction.item.name][type] = { embed, buttons };
+                let name = auction.monster ? auction.item.monster : auction.item.name;
+                if (auctions[name] == null) auctions[name] = {};
+                if (auctions[name][type] == null) auctions[name][type] = {};
+                let embed, dropdown, buttons;
+                if (auction.monster) {
+                    ({ embeds: embed, dropdowns: dropdown, buttons } = createMonsterEmbed(auction.host, auction.item.monster, itemList.filter(a => a.monster == auction.item.monster && auctionList.find(b => b.monster && b.item.name == a.name) != null), Math.round(new Date(auction.start).getTime() / 1000), auction.bids));
+                    embed = embed[type];
+                    dropdown = dropdown[type];
+                } else ({ embed, buttons } = createAuctionEmbed(auction.host, auction.item.name, auction.item.monster, auction.item.type, Math.round(new Date(auction.start).getTime() / 1000), auction.bids));
+
+                if (auctions[name][type].message == null) {
+                    let messageId;
+                    if (auction.monster) messageId = auctionList.find(a => a.item.monster == auction.item.monster && a.item.type == auction.item.type && a.message != null)?.message;
+                    else messageId = auction.message;
+
+                    if (messageId != null) {
                         try {
-                            auctions[auction.item.name][type].message = await channel.send({ embeds: [embed], components: [buttons] });
-                            let { data, error } = await supabase.from(config.supabase.tables.auctions).update({ message: auctions[auction.item.name][type].message.id }).eq('id', auction.id).select('*');
-                            if (error) throw Error(error.message);
-                        } catch (err) {
-                            console.log(`Error sending message for ${auction.item.name} auction:`, err);
-                        }
-                    } else {
-                        try {
-                            const message = await channel.messages.fetch(auction.message);
-                            auctions[auction.item.name][type].message = message;
-                            auctions[auction.item.name][type].embed = embed;
-                            auctions[auction.item.name][type].buttons = [buttons];
+                            const message = await channel.messages.fetch(messageId);
+                            auctions[name][type].message = message;
+                            auctions[name][type].embed = embed;
+                            auctions[name][type].buttons = [buttons];
                             await message.edit({ embeds: [embed], components: [buttons] });
                         } catch (error) {
-                            console.log(`Error updating message for ${auction.item.name}:`, error);
+                            console.log(`Error updating message for ${name}:`, error);
+                            messageId = null;
                         }
                     }
-                } else await auctions[auction.item.name][type].message.edit({ embeds: [embed], components: [buttons] });
+                    
+                    if (messageId == null) {
+                        auctions[name][type] = { embed, buttons };
+                        try {
+                            auctions[name][type].message = await channel.send({ embeds: [embed], components: [dropdown, buttons].filter(a => a != null) });
+                            let { data, error } = await supabase.from(config.supabase.tables.auctions).update({ message: auctions[name][type].message.id }).eq('id', auction.id).select('*');
+                            if (error) throw Error(error.message);
+                        } catch (err) {
+                            console.log(`Error sending message for ${name}:`, err);
+                        }
+                    }
+                } else await auctions[name][type].message.edit({ embeds: [embed], components: [buttons] });
             })())
         }
         await Promise.all(promises);

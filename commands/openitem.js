@@ -57,47 +57,12 @@ module.exports = {
         }
         
         client.commands.get('bid').unblockBid(item.name);
-        ({ error } = await supabase.from(config.supabase.tables.auctions).insert({ item: item.name, host: author.username }));
+        ({ error } = await supabase.from(config.supabase.tables.auctions).insert({ item: item.name, host: author.username, monster: false }));
         if (error) return await interaction.editReply({ content: '', embeds: [errorEmbed('Error Creating Auction', error.message)] });
         const newEmbed = new EmbedBuilder()
             .setColor('#00ff00')
             .setTitle(`Auction Started`)
             .setDescription(`Auction for **${item.name}** has been opened.`);
         await interaction.editReply({ embeds: [newEmbed] });
-
-        const logEmbed = new EmbedBuilder()
-            .setColor('#00ff00')
-            .setTitle(`Auction for ${item.name} (Open)`)
-            .setDescription(`### Opened <t:${Math.floor(Date.now() / 1000)}:R>`)
-            .setAuthor({ name: 'Heirloom\'s Auction Bot', iconURL: 'https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//profile.png' })
-            .setThumbnail(`https://mrqccdyyotqulqmagkhm.supabase.co/storage/v1/object/public/images//${item.monster.split('(')[0].replaceAll(' ', '')}.png`)
-            .addFields(
-                { name: 'Next Bid', value: `${config.auction[item.type].min} ${item.type}` },
-                { name: 'Bids', value: '```​```' }
-            )
-            .setFooter({ text: `Opened by ${author.username}` })
-            .setTimestamp();
-        let logButtons = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`bid-${item.name}`)
-                    .setStyle(ButtonStyle.Primary)
-                    .setLabel('Bid'),
-                new ButtonBuilder()
-                    .setCustomId(`closeitem-${item.name}-false`)
-                    .setStyle(ButtonStyle.Danger)
-                    .setLabel('Close')
-            );
-        (auctions[item.name] = {})[item.type] = { embed: logEmbed, buttons: logButtons }
-        try  {
-            auctions[item.name][item.type].message = await (item.type == 'DKP' ? dkpChannel : pppChannel).send({ embeds: [logEmbed], components: [logButtons] });
-        } catch (err) {
-            console.log('Error sending auction message:', err);
-            const errorEmbed = new EmbedBuilder()
-                .setColor('#ff0000')
-                .setTitle('Error')
-                .setDescription(`Failed to send auction message for **${item.name}**.`);
-            await interaction.editReply({ content: '', embeds: [newEmbed, errorEmbed] });
-        }
     }
 }
